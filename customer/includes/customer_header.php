@@ -164,7 +164,7 @@
             </div>
             <ul class="nav-menu">
                 <li><a href="dashboard.php"><i class="fas fa-tachometer-alt"></i> My Dashboard</a></li>
-                <li><a href="../games.php"><i class="fas fa-gamepad"></i> Browse Games</a></li>
+                <li><a href="games.php"><i class="fas fa-gamepad"></i> Browse Games</a></li>
                 <li><a href="borrowed.php"><i class="fas fa-hand-holding"></i> Borrowed Games</a></li>
                 <li><a href="history.php"><i class="fas fa-history"></i> History</a></li>
                 <li><a href="../logout.php" class="logout">

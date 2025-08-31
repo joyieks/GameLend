@@ -96,7 +96,7 @@ include 'includes/customer_header.php';
     
     <?php if(empty($borrowed_games)): ?>
         <p>You haven't borrowed any games yet.</p>
-        <a href="../games.php" class="btn btn-primary">Browse Available Games</a>
+        <a href="games.php" class="btn btn-primary">Browse Available Games</a>
     <?php else: ?>
         <div class="grid">
             <?php foreach($borrowed_games as $game): ?>
@@ -189,7 +189,7 @@ include 'includes/customer_header.php';
     </div>
     
     <div class="grid">
-        <a href="../games.php" class="btn btn-primary">
+        <a href="games.php" class="btn btn-primary">
             <i class="fas fa-gamepad"></i> Browse Games
         </a>
         <a href="borrowed.php" class="btn btn-success">
@@ -197,9 +197,6 @@ include 'includes/customer_header.php';
         </a>
         <a href="history.php" class="btn btn-warning">
             <i class="fas fa-history"></i> Transaction History
-        </a>
-        <a href="../index.php" class="btn btn-secondary">
-            <i class="fas fa-home"></i> Back to Home
         </a>
     </div>
 </div>

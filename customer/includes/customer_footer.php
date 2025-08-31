@@ -1,10 +1,19 @@
     </main>
-    <footer class="footer">
-        <div class="container">
-            <p>&copy; 2024 GameLend. All rights reserved.</p>
-        </div>
-    </footer>
     
-    <script src="../assets/js/script.js"></script>
+    <script>
+        // Add any customer-specific JavaScript here
+        document.addEventListener('DOMContentLoaded', function() {
+            // Handle borrow confirmation
+            const borrowForms = document.querySelectorAll('form[data-confirm]');
+            borrowForms.forEach(form => {
+                form.addEventListener('submit', function(e) {
+                    const message = this.getAttribute('data-confirm');
+                    if (!confirm(message)) {
+                        e.preventDefault();
+                    }
+                });
+            });
+        });
+    </script>
 </body>
 </html>
