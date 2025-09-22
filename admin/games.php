@@ -17,34 +17,56 @@ $message_type = '';
 if($_SERVER['REQUEST_METHOD'] == 'POST') {
     if(isset($_POST['add_game'])) {
         $title = trim($_POST['title']);
-        $platform = trim($_POST['platform']);
         $status = $_POST['status'];
-        
-        if(empty($title) || empty($platform)) {
-            $message = 'Title and platform are required';
+        $platforms = isset($_POST['platforms']) ? (array)$_POST['platforms'] : [];
+        $quantities = isset($_POST['quantities']) ? (array)$_POST['quantities'] : [];
+
+        // Validate inputs
+        $pairs = [];
+        for ($i = 0; $i < count($platforms); $i++) {
+            $p = trim((string)$platforms[$i]);
+            $q = isset($quantities[$i]) ? (int)$quantities[$i] : 0;
+            if ($p !== '' && $q > 0) {
+                if (!isset($pairs[$p])) { $pairs[$p] = 0; }
+                $pairs[$p] += $q; // aggregate duplicates
+            }
+        }
+
+        if (empty($title) || empty($pairs)) {
+            $message = 'Title and at least one platform with quantity are required';
             $message_type = 'danger';
         } else {
-            $stmt = $pdo->prepare("INSERT INTO games (title, platform, status) VALUES (?, ?, ?)");
-            if($stmt->execute([$title, $platform, $status])) {
-                $message = 'Game added successfully';
+            $pdo->beginTransaction();
+            try {
+                $stmt = $pdo->prepare("INSERT INTO games (title, platform, total_quantity, available_quantity, status) VALUES (?, ?, ?, ?, ?)");
+                foreach ($pairs as $platform => $qty) {
+                    $available = ($status === 'available') ? $qty : 0;
+                    $stmt->execute([$title, $platform, $qty, $available, $status]);
+                }
+                $pdo->commit();
+                $message = 'Game(s) added successfully';
                 $message_type = 'success';
-            } else {
-                $message = 'Failed to add game';
+            } catch (Exception $e) {
+                $pdo->rollBack();
+                $message = 'Failed to add game(s)';
                 $message_type = 'danger';
             }
         }
     } elseif(isset($_POST['edit_game'])) {
         $game_id = $_POST['game_id'];
         $title = trim($_POST['title']);
-        $platform = trim($_POST['platform']);
+        $platform = isset($_POST['platform']) ? trim((string)$_POST['platform']) : '';
         $status = $_POST['status'];
+        $total_quantity = isset($_POST['total_quantity']) ? max(0, (int)$_POST['total_quantity']) : null;
+        $available_quantity = isset($_POST['available_quantity']) ? max(0, (int)$_POST['available_quantity']) : null;
         
-        if(empty($title) || empty($platform)) {
-            $message = 'Title and platform are required';
+        if(empty($title) || $platform === '' || $total_quantity === null || $available_quantity === null) {
+            $message = 'Title and at least one platform are required';
             $message_type = 'danger';
         } else {
-            $stmt = $pdo->prepare("UPDATE games SET title = ?, platform = ?, status = ? WHERE id = ?");
-            if($stmt->execute([$title, $platform, $status, $game_id])) {
+            if ($available_quantity > $total_quantity) { $available_quantity = $total_quantity; }
+            $stmt = $pdo->prepare("UPDATE games SET title = ?, platform = ?, total_quantity = ?, available_quantity = ?, status = ? WHERE id = ?");
+            if($stmt->execute([$title, $platform, $total_quantity, $available_quantity, $status, $game_id])) {
                 $message = 'Game updated successfully';
                 $message_type = 'success';
             } else {
@@ -106,16 +128,21 @@ include 'includes/admin_header.php';
                 </div>
                 
                 <div class="form-group" style="min-width: 150px;">
-                    <label for="platform" class="form-label">Platform</label>
-                    <select id="platform" name="platform" class="form-control" required>
-                        <option value="">Select Platform</option>
-                        <option value="PC">PC</option>
-                        <option value="PlayStation 4">PlayStation 4</option>
-                        <option value="PlayStation 5">PlayStation 5</option>
-                        <option value="Nintendo Switch">Nintendo Switch</option>
-                        <option value="Xbox One">Xbox One</option>
-                        <option value="Xbox Series X">Xbox Series X</option>
-                    </select>
+                    <label class="form-label">Platforms and Quantities</label>
+                    <div id="platform_builder">
+                        <div class="platform-row" style="display:flex; gap:.5rem; align-items:center; margin-bottom:.5rem;">
+                            <select name="platforms[]" class="form-control" style="min-width:160px;">
+                                <option value="PC">PC</option>
+                                <option value="PlayStation 4">PlayStation 4</option>
+                                <option value="PlayStation 5">PlayStation 5</option>
+                                <option value="Nintendo Switch">Nintendo Switch</option>
+                                <option value="Xbox One">Xbox One</option>
+                                <option value="Xbox Series X">Xbox Series X</option>
+                            </select>
+                            <input type="number" name="quantities[]" class="form-control" min="1" value="1" style="width:100px;">
+                            <button type="button" class="btn btn-secondary" onclick="addPlatformRow()">Add</button>
+                        </div>
+                    </div>
                 </div>
                 
                 <div class="form-group" style="min-width: 150px;">
@@ -147,6 +174,7 @@ include 'includes/admin_header.php';
                     <tr>
                         <th>Title</th>
                         <th>Platform</th>
+                        <th>Quantity</th>
                         <th>Status</th>
                         <th>Created</th>
                         <th>Actions</th>
@@ -157,6 +185,7 @@ include 'includes/admin_header.php';
                         <tr>
                             <td><?php echo htmlspecialchars($game['title']); ?></td>
                             <td><?php echo htmlspecialchars($game['platform']); ?></td>
+                            <td><?php echo (int)$game['available_quantity']; ?> / <?php echo (int)$game['total_quantity']; ?></td>
                             <td>
                                 <span class="badge badge-<?php echo $game['status']; ?>">
                                     <?php echo ucfirst($game['status']); ?>
@@ -164,7 +193,7 @@ include 'includes/admin_header.php';
                             </td>
                             <td><?php echo date('M j, Y', strtotime($game['created_at'])); ?></td>
                             <td>
-                                <button onclick="editGame(<?php echo $game['id']; ?>, '<?php echo htmlspecialchars($game['title']); ?>', '<?php echo htmlspecialchars($game['platform']); ?>', '<?php echo $game['status']; ?>')" 
+                                <button onclick="editGame(<?php echo $game['id']; ?>, '<?php echo htmlspecialchars($game['title']); ?>', '<?php echo htmlspecialchars($game['platform']); ?>', <?php echo (int)$game['total_quantity']; ?>, <?php echo (int)$game['available_quantity']; ?>, '<?php echo $game['status']; ?>')" 
                                         class="btn btn-warning btn-sm">
                                     <i class="fas fa-edit"></i> Edit
                                 </button>
@@ -211,6 +240,16 @@ include 'includes/admin_header.php';
             </div>
             
             <div class="form-group">
+                <label for="edit_total_quantity" class="form-label">Total Quantity</label>
+                <input type="number" id="edit_total_quantity" name="total_quantity" class="form-control" min="0" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="edit_available_quantity" class="form-label">Available Quantity</label>
+                <input type="number" id="edit_available_quantity" name="available_quantity" class="form-control" min="0" required>
+            </div>
+            
+            <div class="form-group">
                 <label for="edit_status" class="form-label">Status</label>
                 <select id="edit_status" name="status" class="form-control" required>
                     <option value="available">Available</option>
@@ -228,10 +267,12 @@ include 'includes/admin_header.php';
 </div>
 
 <script>
-function editGame(id, title, platform, status) {
+function editGame(id, title, platform, totalQty, availableQty, status) {
     document.getElementById('edit_game_id').value = id;
     document.getElementById('edit_title').value = title;
     document.getElementById('edit_platform').value = platform;
+    document.getElementById('edit_total_quantity').value = totalQty;
+    document.getElementById('edit_available_quantity').value = availableQty;
     document.getElementById('edit_status').value = status;
     document.getElementById('editModal').style.display = 'block';
 }
@@ -246,6 +287,31 @@ window.onclick = function(event) {
     if (event.target == modal) {
         modal.style.display = 'none';
     }
+}
+
+function addPlatformRow() {
+    const container = document.getElementById('platform_builder');
+    const row = document.createElement('div');
+    row.className = 'platform-row';
+    row.style.cssText = 'display:flex; gap:.5rem; align-items:center; margin-bottom:.5rem;';
+    row.innerHTML = `
+        <select name="platforms[]" class="form-control" style="min-width:160px;">
+            <option value="PC">PC</option>
+            <option value="PlayStation 4">PlayStation 4</option>
+            <option value="PlayStation 5">PlayStation 5</option>
+            <option value="Nintendo Switch">Nintendo Switch</option>
+            <option value="Xbox One">Xbox One</option>
+            <option value="Xbox Series X">Xbox Series X</option>
+        </select>
+        <input type="number" name="quantities[]" class="form-control" min="1" value="1" style="width:100px;">
+        <button type="button" class="btn btn-danger" onclick="removePlatformRow(this)">Remove</button>
+    `;
+    container.appendChild(row);
+}
+
+function removePlatformRow(button) {
+    const row = button.closest('.platform-row');
+    if (row) row.remove();
 }
 </script>
 
