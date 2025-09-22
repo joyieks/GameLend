@@ -84,6 +84,9 @@ include 'includes/customer_header.php';
             <p><strong>Email:</strong> <?php echo htmlspecialchars($user['email']); ?></p>
             <p><strong>Gender:</strong> <?php echo ucfirst(str_replace('_', ' ', $user['gender'])); ?></p>
             <p><strong>Member Since:</strong> <?php echo date('M j, Y', strtotime($user['created_at'])); ?></p>
+            <a href="profile.php" class="btn btn-primary" style="margin-top: 1rem;">
+                <i class="fas fa-user"></i> View Full Profile
+            </a>
         </div>
     </div>
 </div>

@@ -167,6 +167,7 @@
                 <li><a href="games.php"><i class="fas fa-gamepad"></i> Browse Games</a></li>
                 <li><a href="borrowed.php"><i class="fas fa-hand-holding"></i> Borrowed Games</a></li>
                 <li><a href="history.php"><i class="fas fa-history"></i> History</a></li>
+                <li><a href="profile.php"><i class="fas fa-user"></i> My Profile</a></li>
                 <li><a href="../logout.php" class="logout">
                     <i class="fas fa-sign-out-alt"></i>
                     Logout (<?php echo htmlspecialchars($_SESSION['username']); ?>)

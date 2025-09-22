@@ -105,6 +105,23 @@ include 'includes/admin_header.php';
     </div>
 </div>
 
+<!-- Admin Profile Section -->
+<div class="card">
+    <div class="card-header">
+        <h3 class="card-title">Admin Profile</h3>
+    </div>
+    <div style="display: flex; justify-content: space-between; align-items: center; padding: 1rem 0;">
+        <div>
+            <p><strong>Welcome, <?php echo htmlspecialchars($_SESSION['first_name'] . ' ' . $_SESSION['last_name']); ?>!</strong></p>
+            <p><strong>Role:</strong> Administrator</p>
+            <p><strong>Username:</strong> <?php echo htmlspecialchars($_SESSION['username']); ?></p>
+        </div>
+        <a href="profile.php" class="btn btn-primary">
+            <i class="fas fa-user-shield"></i> Manage Profile
+        </a>
+    </div>
+</div>
+
 <div class="card">
     <div class="card-header">
         <h3 class="card-title">Recent Transactions</h3>

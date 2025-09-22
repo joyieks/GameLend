@@ -43,6 +43,29 @@ if($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['delete_user'])) {
     }
 }
 
+// Handle user status toggle
+if($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['toggle_status'])) {
+    $user_id = $_POST['user_id'];
+    $new_status = $_POST['new_status'];
+    
+    // Don't allow admin to disable themselves
+    if($user_id == $_SESSION['user_id'] && $new_status === 'disabled') {
+        $message = 'You cannot disable your own account';
+        $message_type = 'danger';
+    } else {
+        $stmt = $pdo->prepare("UPDATE users SET status = ?, updated_at = NOW() WHERE id = ?");
+        
+        if($stmt->execute([$new_status, $user_id])) {
+            $status_text = $new_status === 'active' ? 'enabled' : 'disabled';
+            $message = "User {$status_text} successfully";
+            $message_type = 'success';
+        } else {
+            $message = 'Failed to update user status. Please try again.';
+            $message_type = 'danger';
+        }
+    }
+}
+
 // Get all users
 $stmt = $pdo->query("SELECT u.*, 
                      COUNT(CASE WHEN bt.status = 'borrowed' THEN 1 END) as active_borrows,
@@ -81,6 +104,7 @@ include 'includes/admin_header.php';
                         <th>Email</th>
                         <th>Gender</th>
                         <th>Role</th>
+                        <th>Status</th>
                         <th>Active Borrows</th>
                         <th>Total Transactions</th>
                         <th>Member Since</th>
@@ -109,6 +133,11 @@ include 'includes/admin_header.php';
                                 </span>
                             </td>
                             <td>
+                                <span class="badge badge-<?php echo ($user['status'] ?? 'active') === 'active' ? 'success' : 'danger'; ?>">
+                                    <?php echo ucfirst($user['status'] ?? 'active'); ?>
+                                </span>
+                            </td>
+                            <td>
                                 <?php if($user['active_borrows'] > 0): ?>
                                     <span class="badge badge-warning"><?php echo $user['active_borrows']; ?></span>
                                 <?php else: ?>
@@ -120,7 +149,33 @@ include 'includes/admin_header.php';
                             </td>
                             <td><?php echo date('M j, Y', strtotime($user['created_at'])); ?></td>
                             <td>
+                                <a href="user_record.php?id=<?php echo $user['id']; ?>" class="btn btn-primary btn-sm">
+                                    <i class="fas fa-eye"></i> View
+                                </a>
+                                
                                 <?php if($user['id'] != $_SESSION['user_id']): ?>
+                                    <?php if(($user['status'] ?? 'active') === 'active'): ?>
+                                        <form method="POST" style="display: inline;" 
+                                              onsubmit="return confirm('Are you sure you want to disable this user? They will not be able to login until re-enabled.')">
+                                            <input type="hidden" name="toggle_status" value="1">
+                                            <input type="hidden" name="user_id" value="<?php echo $user['id']; ?>">
+                                            <input type="hidden" name="new_status" value="disabled">
+                                            <button type="submit" class="btn btn-warning btn-sm">
+                                                <i class="fas fa-user-times"></i> Disable
+                                            </button>
+                                        </form>
+                                    <?php else: ?>
+                                        <form method="POST" style="display: inline;" 
+                                              onsubmit="return confirm('Are you sure you want to enable this user?')">
+                                            <input type="hidden" name="toggle_status" value="1">
+                                            <input type="hidden" name="user_id" value="<?php echo $user['id']; ?>">
+                                            <input type="hidden" name="new_status" value="active">
+                                            <button type="submit" class="btn btn-success btn-sm">
+                                                <i class="fas fa-user-check"></i> Enable
+                                            </button>
+                                        </form>
+                                    <?php endif; ?>
+                                    
                                     <form method="POST" style="display: inline;" 
                                           onsubmit="return confirm('Are you sure you want to delete this user? This action cannot be undone.')">
                                         <input type="hidden" name="user_id" value="<?php echo $user['id']; ?>">
@@ -151,6 +206,8 @@ include 'includes/admin_header.php';
             $admin_count = count(array_filter($users, function($u) { return $u['role'] === 'admin'; }));
             $customer_count = $total_users - $admin_count;
             $active_borrowers = count(array_filter($users, function($u) { return $u['active_borrows'] > 0; }));
+            $disabled_users = count(array_filter($users, function($u) { return ($u['status'] ?? 'active') === 'disabled'; }));
+            $active_users = $total_users - $disabled_users;
             ?>
             
             <div class="card">
@@ -172,6 +229,20 @@ include 'includes/admin_header.php';
                     <h4 class="card-title">Admins</h4>
                 </div>
                 <p style="font-size: 2rem; font-weight: bold; color: #dc3545;"><?php echo $admin_count; ?></p>
+            </div>
+            
+            <div class="card">
+                <div class="card-header">
+                    <h4 class="card-title">Active Users</h4>
+                </div>
+                <p style="font-size: 2rem; font-weight: bold; color: #28a745;"><?php echo $active_users; ?></p>
+            </div>
+            
+            <div class="card">
+                <div class="card-header">
+                    <h4 class="card-title">Disabled Users</h4>
+                </div>
+                <p style="font-size: 2rem; font-weight: bold; color: #dc3545;"><?php echo $disabled_users; ?></p>
             </div>
             
             <div class="card">
