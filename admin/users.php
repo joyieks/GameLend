@@ -79,6 +79,79 @@ $users = $stmt->fetchAll();
 include 'includes/admin_header.php';
 ?>
 
+<style>
+    /* Users page UI refinements */
+    /* Expand page width so no horizontal scroll is needed */
+    main.container { max-width: 100%; padding: 2rem; }
+    .user-table {
+        width: 100%;
+        border-collapse: separate;
+        border-spacing: 0;
+        background: #fff;
+        border-radius: 12px;
+        overflow: hidden;
+        box-shadow: 0 8px 24px rgba(0,0,0,0.06);
+    }
+    .user-table thead th {
+        position: sticky;
+        top: 0;
+        z-index: 2;
+        background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+        color: #fff;
+        border-bottom: none;
+        padding: 0.9rem 1rem;
+        text-align: left;
+        font-weight: 700;
+        white-space: nowrap;
+    }
+    .user-table tbody td {
+        padding: 0.9rem 1rem;
+        vertical-align: middle;
+        border-bottom: 1px solid #f0f2f5;
+        white-space: nowrap;
+    }
+    .user-table tbody tr:hover {
+        background: #fafbff;
+    }
+    .user-meta {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    .badge {
+        border-radius: 999px;
+        padding: 0.25rem 0.6rem;
+        font-weight: 700;
+        letter-spacing: .2px;
+    }
+    .badge-info { background:#e3f2fd; color:#1e88e5; }
+    .badge-primary { background:#ede9fe; color:#6d28d9; }
+    .badge-danger { background:#fee2e2; color:#b91c1c; }
+    .badge-success { background:#dcfce7; color:#166534; }
+    .badge-warning { background:#fff7ed; color:#c2410c; }
+    .actions {
+        display: flex;
+        gap: .5rem;
+        align-items: center;
+        flex-wrap: wrap;
+    }
+    .btn.btn-sm {
+        padding: .45rem .7rem;
+        border-radius: 8px;
+        font-weight: 700;
+        box-shadow: 0 4px 10px rgba(0,0,0,.08);
+    }
+    .btn-primary.btn-sm { background: linear-gradient(135deg,#8b5cf6,#6366f1); border: none; }
+    .btn-warning.btn-sm { background: #f59e0b; border: none; color:#fff; }
+    .btn-success.btn-sm { background: #10b981; border: none; }
+    .btn-danger.btn-sm { background: #ef4444; border: none; }
+    .table-wrap { border-radius: 12px; overflow: visible; }
+    @media (max-width: 992px) {
+        .hide-lg { display: none; }
+        .user-table thead th.hide-lg { display: none; }
+    }
+</style>
+
 <div class="card">
     <div class="card-header">
         <h2 class="card-title">Manage Users</h2>
@@ -96,17 +169,18 @@ include 'includes/admin_header.php';
         <?php if(empty($users)): ?>
             <p>No users found.</p>
         <?php else: ?>
-            <table class="table">
+            <div class="table-wrap">
+            <table class="table user-table">
                 <thead>
                     <tr>
                         <th>Name</th>
                         <th>Username</th>
                         <th>Email</th>
-                        <th>Gender</th>
+                        <th class="hide-lg">Gender</th>
                         <th>Role</th>
                         <th>Status</th>
-                        <th>Active Borrows</th>
-                        <th>Total Transactions</th>
+                        <th class="hide-lg">Active Borrows</th>
+                        <th class="hide-lg">Total Transactions</th>
                         <th>Member Since</th>
                         <th>Actions</th>
                     </tr>
@@ -122,10 +196,8 @@ include 'includes/admin_header.php';
                             </td>
                             <td><?php echo htmlspecialchars($user['username']); ?></td>
                             <td><?php echo htmlspecialchars($user['email']); ?></td>
-                            <td>
-                                <span class="badge badge-info">
-                                    <?php echo ucfirst(str_replace('_', ' ', $user['gender'])); ?>
-                                </span>
+                            <td class="hide-lg">
+                                <span class="badge badge-info"><?php echo ucfirst(str_replace('_', ' ', $user['gender'])); ?></span>
                             </td>
                             <td>
                                 <span class="badge badge-<?php echo $user['role'] === 'admin' ? 'danger' : 'primary'; ?>">
@@ -137,60 +209,52 @@ include 'includes/admin_header.php';
                                     <?php echo ucfirst($user['status'] ?? 'active'); ?>
                                 </span>
                             </td>
-                            <td>
+                            <td class="hide-lg">
                                 <?php if($user['active_borrows'] > 0): ?>
                                     <span class="badge badge-warning"><?php echo $user['active_borrows']; ?></span>
                                 <?php else: ?>
                                     <span class="badge badge-success">0</span>
                                 <?php endif; ?>
                             </td>
-                            <td>
+                            <td class="hide-lg">
                                 <span class="badge badge-info"><?php echo $user['total_transactions']; ?></span>
                             </td>
                             <td><?php echo date('M j, Y', strtotime($user['created_at'])); ?></td>
                             <td>
-                                <a href="user_record.php?id=<?php echo $user['id']; ?>" class="btn btn-primary btn-sm">
-                                    <i class="fas fa-eye"></i> View
-                                </a>
-                                
-                                <?php if($user['id'] != $_SESSION['user_id']): ?>
-                                    <?php if(($user['status'] ?? 'active') === 'active'): ?>
-                                        <form method="POST" style="display: inline;" 
-                                              onsubmit="return confirm('Are you sure you want to disable this user? They will not be able to login until re-enabled.')">
-                                            <input type="hidden" name="toggle_status" value="1">
+                                <div class="actions">
+                                    <a href="user_record.php?id=<?php echo $user['id']; ?>" class="btn btn-primary btn-sm">
+                                        <i class="fas fa-eye"></i> View
+                                    </a>
+                                    <?php if($user['id'] != $_SESSION['user_id']): ?>
+                                        <?php if(($user['status'] ?? 'active') === 'active'): ?>
+                                            <form method="POST" onsubmit="return confirm('Disable this user? They will not be able to login until re-enabled.')">
+                                                <input type="hidden" name="toggle_status" value="1">
+                                                <input type="hidden" name="user_id" value="<?php echo $user['id']; ?>">
+                                                <input type="hidden" name="new_status" value="disabled">
+                                                <button type="submit" class="btn btn-warning btn-sm"><i class="fas fa-user-times"></i> Disable</button>
+                                            </form>
+                                        <?php else: ?>
+                                            <form method="POST" onsubmit="return confirm('Enable this user?')">
+                                                <input type="hidden" name="toggle_status" value="1">
+                                                <input type="hidden" name="user_id" value="<?php echo $user['id']; ?>">
+                                                <input type="hidden" name="new_status" value="active">
+                                                <button type="submit" class="btn btn-success btn-sm"><i class="fas fa-user-check"></i> Enable</button>
+                                            </form>
+                                        <?php endif; ?>
+                                        <form method="POST" onsubmit="return confirm('Delete this user? This action cannot be undone.')">
                                             <input type="hidden" name="user_id" value="<?php echo $user['id']; ?>">
-                                            <input type="hidden" name="new_status" value="disabled">
-                                            <button type="submit" class="btn btn-warning btn-sm">
-                                                <i class="fas fa-user-times"></i> Disable
-                                            </button>
+                                            <button type="submit" name="delete_user" class="btn btn-danger btn-sm"><i class="fas fa-trash"></i> Delete</button>
                                         </form>
                                     <?php else: ?>
-                                        <form method="POST" style="display: inline;" 
-                                              onsubmit="return confirm('Are you sure you want to enable this user?')">
-                                            <input type="hidden" name="toggle_status" value="1">
-                                            <input type="hidden" name="user_id" value="<?php echo $user['id']; ?>">
-                                            <input type="hidden" name="new_status" value="active">
-                                            <button type="submit" class="btn btn-success btn-sm">
-                                                <i class="fas fa-user-check"></i> Enable
-                                            </button>
-                                        </form>
+                                        <span class="text-muted">Current User</span>
                                     <?php endif; ?>
-                                    
-                                    <form method="POST" style="display: inline;" 
-                                          onsubmit="return confirm('Are you sure you want to delete this user? This action cannot be undone.')">
-                                        <input type="hidden" name="user_id" value="<?php echo $user['id']; ?>">
-                                        <button type="submit" name="delete_user" class="btn btn-danger btn-sm">
-                                            <i class="fas fa-trash"></i> Delete
-                                        </button>
-                                    </form>
-                                <?php else: ?>
-                                    <span class="text-muted">Current User</span>
-                                <?php endif; ?>
+                                </div>
                             </td>
                         </tr>
                     <?php endforeach; ?>
                 </tbody>
             </table>
+            </div>
         <?php endif; ?>
     </div>
     
@@ -254,25 +318,7 @@ include 'includes/admin_header.php';
         </div>
     </div>
     
-    <!-- Quick Actions -->
-    <div class="card">
-        <div class="card-header">
-            <h3 class="card-title">Quick Actions</h3>
-        </div>
-        
-        <div class="grid">
-            <a href="dashboard.php" class="btn btn-primary">
-                <i class="fas fa-tachometer-alt"></i> Back to Dashboard
-            </a>
-            <a href="games.php" class="btn btn-success">
-                <i class="fas fa-gamepad"></i> Manage Games
-            </a>
-            <a href="reports.php" class="btn btn-warning">
-                <i class="fas fa-chart-bar"></i> View Reports
-            </a>
-            
-        </div>
-    </div>
+    
 </div>
 
 <?php include 'includes/admin_footer.php'; ?>

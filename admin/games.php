@@ -105,6 +105,63 @@ $games = $stmt->fetchAll();
 include 'includes/admin_header.php';
 ?>
 
+<style>
+    /* Expand width and refresh UI for Manage Games */
+    main.container { max-width: 100%; padding: 2rem; }
+    .game-table {
+        width: 100%;
+        border-collapse: separate;
+        border-spacing: 0;
+        background: #fff;
+        border-radius: 12px;
+        overflow: hidden;
+        box-shadow: 0 8px 24px rgba(0,0,0,0.06);
+    }
+    .game-table thead th {
+        background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+        color: #fff;
+        padding: 0.9rem 1rem;
+        text-align: left;
+        font-weight: 700;
+        white-space: nowrap;
+        border-bottom: none;
+    }
+    .game-table tbody td {
+        padding: 0.9rem 1rem;
+        vertical-align: middle;
+        border-bottom: 1px solid #f0f2f5;
+        white-space: nowrap;
+    }
+    .game-table tbody tr:hover { background: #fafbff; }
+    .badge { border-radius: 999px; padding: .25rem .6rem; font-weight: 700; }
+    .badge-available { background:#dcfce7; color:#166534; }
+    .badge-borrowed { background:#fff7ed; color:#c2410c; }
+    .badge-maintenance { background:#fee2e2; color:#b91c1c; }
+    .btn.btn-sm { padding: .45rem .7rem; border-radius: 8px; font-weight: 700; box-shadow: 0 4px 10px rgba(0,0,0,.08); }
+    .btn-warning.btn-sm { background:#f59e0b; border:none; color:#fff; }
+    .btn-danger.btn-sm { background:#ef4444; border:none; }
+    .btn-success { background: #10b981; border: none; }
+    .card h3.card-title { margin: 0; }
+    .form-inline { display:flex; gap:1rem; align-items:end; flex-wrap:wrap; }
+    .form-inline .form-group { min-width: 150px; }
+    .qty { font-weight: 700; }
+    @media (max-width: 992px) { .hide-lg { display:none; } }
+    /* Modal polish */
+    .modal .btn-primary { background: linear-gradient(135deg,#8b5cf6,#6366f1); border: none; }
+    .modal .btn-secondary { background:#64748b; border:none; color:#fff; }
+    .modal h3 { margin-top:0; }
+    .modal-content { max-width: 640px !important; }
+    .platform-row .btn-danger { background:#ef4444; border:none; }
+    .btn-secondary { background:#475569; color:#fff; border:none; }
+    .btn-success { background: linear-gradient(135deg,#10b981,#059669); }
+    .card { border-radius: 12px; }
+    .card-header { border-top-left-radius: 12px; border-top-right-radius: 12px; }
+    .card + .card { margin-top: 1.25rem; }
+    .alert { border-radius: 10px; }
+    .qty-wrap { font-size: .95rem; }
+    .qty-wrap .sep { color:#64748b; }
+  </style>
+
 <div class="card">
     <div class="card-header">
         <h2 class="card-title">Manage Games</h2>
@@ -121,13 +178,13 @@ include 'includes/admin_header.php';
         </div>
         
         <form method="POST" data-validate>
-            <div style="display: flex; gap: 1rem; align-items: end; flex-wrap: wrap;">
-                <div class="form-group" style="flex: 1; min-width: 200px;">
+            <div class="form-inline">
+                <div class="form-group" style="flex: 1; min-width: 220px;">
                     <label for="title" class="form-label">Game Title</label>
                     <input type="text" id="title" name="title" class="form-control" required>
                 </div>
                 
-                <div class="form-group" style="min-width: 150px;">
+                <div class="form-group" style="min-width: 260px;">
                     <label class="form-label">Platforms and Quantities</label>
                     <div id="platform_builder">
                         <div class="platform-row" style="display:flex; gap:.5rem; align-items:center; margin-bottom:.5rem;">
@@ -169,14 +226,14 @@ include 'includes/admin_header.php';
         <?php if(empty($games)): ?>
             <p>No games found.</p>
         <?php else: ?>
-            <table class="table">
+            <table class="table game-table">
                 <thead>
                     <tr>
                         <th>Title</th>
                         <th>Platform</th>
                         <th>Quantity</th>
                         <th>Status</th>
-                        <th>Created</th>
+                        <th class="hide-lg">Created</th>
                         <th>Actions</th>
                     </tr>
                 </thead>
@@ -185,13 +242,13 @@ include 'includes/admin_header.php';
                         <tr>
                             <td><?php echo htmlspecialchars($game['title']); ?></td>
                             <td><?php echo htmlspecialchars($game['platform']); ?></td>
-                            <td><?php echo (int)$game['available_quantity']; ?> / <?php echo (int)$game['total_quantity']; ?></td>
+                            <td class="qty-wrap"><span class="qty"><?php echo (int)$game['available_quantity']; ?></span> <span class="sep">/</span> <?php echo (int)$game['total_quantity']; ?></td>
                             <td>
                                 <span class="badge badge-<?php echo $game['status']; ?>">
                                     <?php echo ucfirst($game['status']); ?>
                                 </span>
                             </td>
-                            <td><?php echo date('M j, Y', strtotime($game['created_at'])); ?></td>
+                            <td class="hide-lg"><?php echo date('M j, Y', strtotime($game['created_at'])); ?></td>
                             <td>
                                 <button onclick="editGame(<?php echo $game['id']; ?>, '<?php echo htmlspecialchars($game['title']); ?>', '<?php echo htmlspecialchars($game['platform']); ?>', <?php echo (int)$game['total_quantity']; ?>, <?php echo (int)$game['available_quantity']; ?>, '<?php echo $game['status']; ?>')" 
                                         class="btn btn-warning btn-sm">
