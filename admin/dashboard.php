@@ -2,11 +2,15 @@
 session_start();
 $page_title = "Admin Dashboard";
 
-// Check if user is logged in and is admin
-if(!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'admin') {
-    header('Location: ../login.php');
-    exit();
-}
+// Include authentication check
+require_once '../includes/auth_check.php';
+
+// Set security headers
+setSecurityHeaders();
+
+// Validate session and require admin access
+validateSession();
+requireAdmin();
 
 require_once '../db/db_connect.php';
 
@@ -169,32 +173,5 @@ include 'includes/admin_header.php';
     <?php endif; ?>
 </div>
 
-<div class="card">
-    <div class="card-header">
-        <h3 class="card-title">Quick Actions</h3>
-    </div>
-    
-    <div class="grid">
-        <a href="games.php" class="btn btn-primary">
-            <i class="fas fa-gamepad"></i> Manage Games
-        </a>
-        <a href="users.php" class="btn btn-success">
-            <i class="fas fa-users"></i> Manage Users
-        </a>
-        <a href="reports.php" class="btn btn-warning">
-            <i class="fas fa-chart-bar"></i> View Reports
-        </a>
-        <a href="transactions.php" class="btn btn-info">
-            <i class="fas fa-exchange-alt"></i> View Transactions
-        </a>
-        <a href="overdue.php" class="btn btn-danger">
-            <i class="fas fa-exclamation-triangle"></i> Overdue Games
-        </a>
-        <a href="create_admin.php" class="btn btn-secondary">
-            <i class="fas fa-user-plus"></i> Create User
-        </a>
-
-    </div>
-</div>
 
 <?php include 'includes/admin_footer.php'; ?>

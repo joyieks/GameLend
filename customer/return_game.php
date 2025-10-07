@@ -1,11 +1,15 @@
 <?php
 session_start();
 
-// Check if user is logged in and is customer
-if(!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'customer') {
-    header('Location: ../login.php');
-    exit();
-}
+// Include authentication check
+require_once '../includes/auth_check.php';
+
+// Set security headers
+setSecurityHeaders();
+
+// Validate session and require customer access
+validateSession();
+requireCustomer();
 
 require_once '../db/db_connect.php';
 

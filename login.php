@@ -2,6 +2,11 @@
 session_start();
 $page_title = "Login";
 
+// Set security headers
+header("Cache-Control: no-cache, no-store, must-revalidate");
+header("Pragma: no-cache");
+header("Expires: 0");
+
 if(isset($_SESSION['user_id'])) {
     header('Location: index.php');
     exit();
@@ -226,55 +231,52 @@ include 'includes/header.php';
         text-decoration: underline;
     }
     
-    .demo-section {
-        margin-top: 2rem;
-        padding: 1.5rem;
-        background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
-        border-radius: 10px;
-        border-left: 4px solid var(--secondary);
-    }
-    
-    .demo-title {
-        margin-top: 0;
-        margin-bottom: 1rem;
-        font-size: 1.1rem;
-        color: var(--dark);
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
-    }
-    
-    .demo-title i {
-        color: var(--secondary);
-    }
-    
-    .demo-account {
-        display: flex;
-        margin-bottom: 0.5rem;
-        padding: 0.5rem;
-        background: white;
-        border-radius: 8px;
-        align-items: center;
-    }
-    
-    .demo-label {
-        font-weight: 600;
-        min-width: 70px;
-        color: var(--primary);
-    }
-    
-    .demo-value {
-        color: #6c757d;
-        font-family: 'Courier New', monospace;
-    }
-    
-    @media (max-width: 576px) {
+    @media (max-width: 768px) {
         .login-container {
             padding: 1rem;
+            min-height: 90vh;
+        }
+        
+        .login-card {
+            margin: 1rem 0;
         }
         
         .card-body {
             padding: 1.5rem;
+        }
+        
+        .form-control {
+            font-size: 16px; /* Prevents zoom on iOS */
+            padding: 0.875rem;
+        }
+        
+        .btn {
+            padding: 0.875rem 1.25rem;
+            min-height: 44px; /* Touch-friendly */
+        }
+    }
+    
+    @media (max-width: 576px) {
+        .login-container {
+            padding: 0.5rem;
+        }
+        
+        .card-body {
+            padding: 1rem;
+        }
+        
+        .card-title {
+            font-size: 1.25rem;
+        }
+    }
+    
+    @media (max-width: 480px) {
+        .login-card {
+            border-radius: 15px;
+        }
+        
+        .card-title {
+            font-size: 1.1rem;
         }
     }
 </style>
@@ -324,22 +326,6 @@ include 'includes/header.php';
             <div class="register-link">
                 Don't have an account? <a href="register.php">Register here</a>
             </div>
-            
-            <div class="demo-section">
-                <h4 class="demo-title">
-                    <i class="fas fa-info-circle"></i> Demo Accounts
-                </h4>
-                
-                <div class="demo-account">
-                    <span class="demo-label">Admin:</span>
-                    <span class="demo-value">username: admin, password: admin123</span>
-                </div>
-                
-                <div class="demo-account">
-                    <span class="demo-label">Customer:</span>
-                    <span class="demo-value">Register a new account</span>
-                </div>
-            </div>
         </div>
     </div>
 </div>
@@ -359,6 +345,22 @@ include 'includes/header.php';
             icon.classList.remove('fa-eye-slash');
             icon.classList.add('fa-eye');
         }
+    }
+
+    // Prevent back button access after logout
+    window.addEventListener('pageshow', function(event) {
+        if (event.persisted) {
+            // Page was loaded from cache, reload to ensure fresh data
+            window.location.reload();
+        }
+    });
+
+    // Clear any cached data when page loads
+    if (window.history && window.history.pushState) {
+        window.history.pushState(null, null, window.location.href);
+        window.addEventListener('popstate', function(event) {
+            window.history.pushState(null, null, window.location.href);
+        });
     }
 </script>
 

@@ -2,11 +2,15 @@
 session_start();
 $page_title = "Customer Dashboard";
 
-// Check if user is logged in and is customer
-if(!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'customer') {
-    header('Location: ../login.php');
-    exit();
-}
+// Include authentication check
+require_once '../includes/auth_check.php';
+
+// Set security headers
+setSecurityHeaders();
+
+// Validate session and require customer access
+validateSession();
+requireCustomer();
 
 require_once '../db/db_connect.php';
 
@@ -75,19 +79,6 @@ include 'includes/customer_header.php';
             <?php endif; ?>
         </div>
         
-        <div class="card">
-            <div class="card-header">
-                <h3 class="card-title">Account Info</h3>
-            </div>
-            <p><strong>Full Name:</strong> <?php echo htmlspecialchars($user['first_name'] . ' ' . $user['last_name']); ?></p>
-            <p><strong>Username:</strong> <?php echo htmlspecialchars($user['username']); ?></p>
-            <p><strong>Email:</strong> <?php echo htmlspecialchars($user['email']); ?></p>
-            <p><strong>Gender:</strong> <?php echo ucfirst(str_replace('_', ' ', $user['gender'])); ?></p>
-            <p><strong>Member Since:</strong> <?php echo date('M j, Y', strtotime($user['created_at'])); ?></p>
-            <a href="profile.php" class="btn btn-primary" style="margin-top: 1rem;">
-                <i class="fas fa-user"></i> View Full Profile
-            </a>
-        </div>
     </div>
 </div>
 
@@ -185,23 +176,5 @@ include 'includes/customer_header.php';
     <?php endif; ?>
 </div>
 
-<!-- Quick Actions -->
-<div class="card">
-    <div class="card-header">
-        <h3 class="card-title">Quick Actions</h3>
-    </div>
-    
-    <div class="grid">
-        <a href="games.php" class="btn btn-primary">
-            <i class="fas fa-gamepad"></i> Browse Games
-        </a>
-        <a href="borrowed.php" class="btn btn-success">
-            <i class="fas fa-hand-holding"></i> My Borrowed Games
-        </a>
-        <a href="history.php" class="btn btn-warning">
-            <i class="fas fa-history"></i> Transaction History
-        </a>
-    </div>
-</div>
 
 <?php include 'includes/customer_footer.php'; ?>

@@ -132,23 +132,128 @@
             margin-left: 0.5rem;
         }
         
+        /* Mobile Navigation */
+        .mobile-menu-toggle {
+            display: none;
+            background: none;
+            border: none;
+            color: white;
+            font-size: 1.5rem;
+            cursor: pointer;
+            padding: 0.5rem;
+            border-radius: 5px;
+            transition: background-color 0.3s ease;
+        }
+        
+        .mobile-menu-toggle:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+        
+        .mobile-menu-toggle i {
+            transition: transform 0.3s ease;
+        }
+        
+        .mobile-menu-toggle.active i {
+            transform: rotate(90deg);
+        }
+        
+        .nav-menu {
+            transition: all 0.3s ease;
+        }
+        
         /* Mobile responsiveness */
         @media (max-width: 768px) {
             .navbar {
                 padding: 0.8rem 1rem;
-                flex-direction: column;
-                gap: 1rem;
+                position: relative;
+            }
+            
+            .navbar .container {
+                justify-content: space-between;
+                align-items: center;
+            }
+            
+            .mobile-menu-toggle {
+                display: block;
             }
             
             .nav-menu {
-                flex-wrap: wrap;
-                justify-content: center;
-                gap: 0.8rem;
+                position: absolute;
+                top: 100%;
+                left: 0;
+                right: 0;
+                background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+                flex-direction: column;
+                padding: 1rem;
+                box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+                border-radius: 0 0 15px 15px;
+                transform: translateY(-100%);
+                opacity: 0;
+                visibility: hidden;
+                z-index: 1000;
+            }
+            
+            .nav-menu.active {
+                transform: translateY(0);
+                opacity: 1;
+                visibility: visible;
+            }
+            
+            .nav-menu li {
+                width: 100%;
+                margin: 0;
             }
             
             .nav-menu a {
+                display: block;
+                padding: 1rem;
+                margin: 0.25rem 0;
+                border-radius: 10px;
+                text-align: center;
+                font-size: 1rem;
+                font-weight: 600;
+                background: rgba(255, 255, 255, 0.1);
+                transition: all 0.3s ease;
+                border: 2px solid transparent;
+            }
+            
+            .nav-menu a:hover {
+                background: rgba(255, 255, 255, 0.2);
+                transform: translateX(5px);
+                border-color: var(--secondary);
+            }
+            
+            .nav-menu a.logout {
+                background: rgba(231, 76, 60, 0.8);
+                color: white;
+            }
+            
+            .nav-menu a.logout:hover {
+                background: rgba(231, 76, 60, 1);
+                transform: translateX(5px);
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .navbar {
+                padding: 0.6rem 0.8rem;
+            }
+            
+            .nav-brand a {
+                font-size: 1.3rem;
+            }
+            
+            .mobile-menu-toggle {
+                font-size: 1.3rem;
+            }
+            
+            .nav-menu {
+                padding: 0.8rem;
+            }
+            
+            .nav-menu a {
+                padding: 0.8rem;
                 font-size: 0.9rem;
-                padding: 0.4rem 0.6rem;
             }
         }
     </style>
@@ -162,7 +267,10 @@
                     GameLend
                 </a>
             </div>
-            <ul class="nav-menu">
+            <button class="mobile-menu-toggle" onclick="toggleMobileMenu()">
+                <i class="fas fa-bars"></i>
+            </button>
+            <ul class="nav-menu" id="navMenu">
                 <li><a href="dashboard.php"><i class="fas fa-tachometer-alt"></i> My Dashboard</a></li>
                 <li><a href="games.php"><i class="fas fa-gamepad"></i> Browse Games</a></li>
                 <li><a href="borrowed.php"><i class="fas fa-hand-holding"></i> Borrowed Games</a></li>

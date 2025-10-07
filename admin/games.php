@@ -2,11 +2,15 @@
 session_start();
 $page_title = "Manage Games";
 
-// Check if user is logged in and is admin
-if(!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'admin') {
-    header('Location: ../login.php');
-    exit();
-}
+// Include authentication check
+require_once '../includes/auth_check.php';
+
+// Set security headers
+setSecurityHeaders();
+
+// Validate session and require admin access
+validateSession();
+requireAdmin();
 
 require_once '../db/db_connect.php';
 
@@ -226,7 +230,8 @@ include 'includes/admin_header.php';
         <?php if(empty($games)): ?>
             <p>No games found.</p>
         <?php else: ?>
-            <table class="table game-table">
+            <div class="table-responsive">
+                <table class="table game-table">
                 <thead>
                     <tr>
                         <th>Title</th>
@@ -266,7 +271,8 @@ include 'includes/admin_header.php';
                         </tr>
                     <?php endforeach; ?>
                 </tbody>
-            </table>
+                </table>
+            </div>
         <?php endif; ?>
     </div>
 </div>

@@ -1,11 +1,15 @@
 <?php
 session_start();
 
-// Check if user is logged in and is admin
-if(!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'admin') {
-    header('Location: ../login.php');
-    exit();
-}
+// Include authentication check
+require_once '../includes/auth_check.php';
+
+// Set security headers
+setSecurityHeaders();
+
+// Validate session and require admin access
+validateSession();
+requireAdmin();
 
 require_once '../db/db_connect.php';
 

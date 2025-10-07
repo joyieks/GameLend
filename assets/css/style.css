@@ -289,27 +289,196 @@ main {
     margin-top: auto;
 }
 
-/* Responsive */
-@media (max-width: 768px) {
-    .nav-menu {
+/* Responsive Design */
+/* Large tablets and small desktops */
+@media (max-width: 1200px) {
+    .container {
+        padding: 0 15px;
+    }
+    
+    .grid {
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        gap: 1rem;
+    }
+}
+
+/* Tablets */
+@media (max-width: 992px) {
+    .navbar .container {
         flex-direction: column;
         gap: 1rem;
     }
     
-    .hero h1 {
-        font-size: 2rem;
+    .nav-menu {
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 1rem;
     }
     
-    .grid {
-        grid-template-columns: 1fr;
+    .hero h1 {
+        font-size: 2.5rem;
+    }
+    
+    .card {
+        padding: 1rem;
     }
     
     .table {
-        font-size: 0.875rem;
+        font-size: 0.9rem;
     }
     
     .table th,
     .table td {
-        padding: 0.5rem;
+        padding: 0.75rem 0.5rem;
+    }
+    
+    /* Hide less important columns on tablets */
+    .hide-lg {
+        display: none;
+    }
+}
+
+/* Mobile devices */
+@media (max-width: 768px) {
+    .container {
+        padding: 0 10px;
+    }
+    
+    .navbar {
+        padding: 0.8rem 0;
+    }
+    
+    .hero {
+        padding: 2rem 1rem;
+        margin-bottom: 1rem;
+    }
+    
+    .hero h1 {
+        font-size: 2rem;
+        line-height: 1.2;
+    }
+    
+    .hero p {
+        font-size: 1rem;
+    }
+    
+    .grid {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+    }
+    
+    .card {
+        padding: 1rem;
+        margin-bottom: 1rem;
+    }
+    
+    .card-title {
+        font-size: 1.25rem;
+    }
+    
+    /* Table responsive wrapper */
+    .table-responsive {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        border-radius: 10px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+    
+    .table {
+        min-width: 600px;
+        font-size: 0.8rem;
+    }
+    
+    .table th,
+    .table td {
+        padding: 0.5rem 0.25rem;
+        white-space: nowrap;
+    }
+    
+    /* Form improvements */
+    .form-control {
+        padding: 0.875rem;
+        font-size: 16px; /* Prevents zoom on iOS */
+    }
+    
+    .btn {
+        padding: 0.875rem 1.25rem;
+        font-size: 1rem;
+        min-height: 44px; /* Touch-friendly */
+    }
+    
+    .btn-sm {
+        padding: 0.5rem 0.75rem;
+        font-size: 0.875rem;
+        min-height: 36px;
+    }
+    
+    /* Modal improvements */
+    .modal-content {
+        margin: 5% auto;
+        width: 95%;
+        max-width: none;
+        padding: 1.5rem;
+    }
+    
+    /* Form inline improvements */
+    .form-inline {
+        flex-direction: column;
+        gap: 1rem;
+        align-items: stretch;
+    }
+    
+    .form-inline .form-group {
+        min-width: auto;
+        width: 100%;
+    }
+}
+
+/* Small mobile devices */
+@media (max-width: 576px) {
+    .container {
+        padding: 0 5px;
+    }
+    
+    .hero h1 {
+        font-size: 1.75rem;
+    }
+    
+    .card {
+        padding: 0.75rem;
+    }
+    
+    .table {
+        font-size: 0.75rem;
+    }
+    
+    .table th,
+    .table td {
+        padding: 0.375rem 0.125rem;
+    }
+    
+    .btn {
+        padding: 0.75rem 1rem;
+        font-size: 0.9rem;
+    }
+    
+    .modal-content {
+        margin: 2% auto;
+        padding: 1rem;
+    }
+}
+
+/* Extra small devices */
+@media (max-width: 480px) {
+    .hero h1 {
+        font-size: 1.5rem;
+    }
+    
+    .card-title {
+        font-size: 1.1rem;
+    }
+    
+    .table {
+        font-size: 0.7rem;
     }
 }
