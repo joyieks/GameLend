@@ -276,10 +276,7 @@
                 <li><a href="users.php"><i class="fas fa-users"></i> Manage Users</a></li>
                 <li><a href="reports.php"><i class="fas fa-chart-bar"></i> Reports</a></li>
                 <li><a href="profile.php"><i class="fas fa-user-shield"></i> My Profile</a></li>
-                <li><a href="../logout.php" class="logout">
-                    <i class="fas fa-sign-out-alt"></i>
-                    Logout (<?php echo htmlspecialchars($_SESSION['username']); ?>)
-                </a></li>
+                <!-- Supabase handles auth; add client-side logout if needed -->
             </ul>
         </nav>
     </header>

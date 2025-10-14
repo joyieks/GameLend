@@ -1,10 +1,10 @@
 <?php
-session_start();
+require_once 'includes/session_config.php';
 
-// Clear all session variables
+// Unset all session variables
 $_SESSION = array();
 
-// Destroy the session cookie
+// Delete the session cookie
 if (ini_get("session.use_cookies")) {
     $params = session_get_cookie_params();
     setcookie(session_name(), '', time() - 42000,
@@ -16,12 +16,7 @@ if (ini_get("session.use_cookies")) {
 // Destroy the session
 session_destroy();
 
-// Set cache control headers to prevent back button access
-header("Cache-Control: no-cache, no-store, must-revalidate");
-header("Pragma: no-cache");
-header("Expires: 0");
-
-// Redirect to home page
-header('Location: index.php');
+// Redirect to login page with logout message
+header('Location: login.php?logout=1');
 exit();
 ?>

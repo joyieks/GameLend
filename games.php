@@ -1,5 +1,5 @@
     <?php
-session_start();
+require_once 'includes/session_config.php';
 $page_title = "Games";
 require_once 'db/db_connect.php';
 

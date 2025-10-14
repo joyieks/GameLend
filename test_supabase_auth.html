@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Supabase Auth Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 600px; margin: 50px auto; padding: 20px; }
+        .test-box { background: #f5f5f5; padding: 20px; border-radius: 8px; margin: 20px 0; }
+        .error { background: #ffebee; color: #c62828; padding: 15px; border-radius: 8px; margin: 10px 0; }
+        .success { background: #e8f5e9; color: #2e7d32; padding: 15px; border-radius: 8px; margin: 10px 0; }
+        .info { background: #e3f2fd; color: #1565c0; padding: 15px; border-radius: 8px; margin: 10px 0; }
+        button { background: #6c5ce7; color: white; border: none; padding: 12px 24px; border-radius: 8px; cursor: pointer; margin: 5px; }
+        button:hover { background: #5649c9; }
+        input { width: 100%; padding: 10px; margin: 5px 0; border: 1px solid #ddd; border-radius: 4px; box-sizing: border-box; }
+        .log { background: #000; color: #0f0; padding: 15px; border-radius: 8px; font-family: monospace; font-size: 12px; max-height: 300px; overflow-y: auto; }
+    </style>
+</head>
+<body>
+    <h1>🧪 Supabase Auth Debugging Tool</h1>
+    
+    <div class="info">
+        <strong>Purpose:</strong> This tool helps diagnose Supabase Auth issues without the database trigger.
+    </div>
+
+    <div class="test-box">
+        <h3>Test 1: Minimal Signup (No User Metadata)</h3>
+        <p>This tests basic Supabase signup without any user metadata or database triggers.</p>
+        <input type="email" id="email1" placeholder="test@example.com">
+        <input type="password" id="password1" placeholder="password123" value="test123456">
+        <button onclick="testMinimalSignup()">Test Basic Signup</button>
+    </div>
+
+    <div class="test-box">
+        <h3>Test 2: Signup with User Metadata</h3>
+        <p>This tests signup with user metadata (first_name, last_name, etc.)</p>
+        <input type="email" id="email2" placeholder="test2@example.com">
+        <input type="password" id="password2" placeholder="password123" value="test123456">
+        <input type="text" id="firstName" placeholder="First Name" value="John">
+        <input type="text" id="lastName" placeholder="Last Name" value="Doe">
+        <button onclick="testSignupWithMetadata()">Test Signup with Metadata</button>
+    </div>
+
+    <div class="test-box">
+        <h3>Test 3: Check Email Confirmation Settings</h3>
+        <button onclick="checkAuthSettings()">Check Auth Settings</button>
+    </div>
+
+    <div class="test-box">
+        <h3>Test 4: Signup WITHOUT Email Confirmation</h3>
+        <p style="color: #c62828;">⚠️ This requires email confirmation to be DISABLED in Supabase</p>
+        <input type="email" id="email4" placeholder="test4@example.com">
+        <input type="password" id="password4" placeholder="password123" value="test123456">
+        <button onclick="testSignupNoConfirm()">Test Signup (No Confirm)</button>
+    </div>
+
+    <div id="results"></div>
+    <div class="log" id="log"></div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script>
+        // IMPORTANT: Replace with your actual Supabase credentials
+        // Get these from your Supabase Dashboard > Settings > API
+        const SUPABASE_URL = 'YOUR_SUPABASE_URL_HERE';
+        const SUPABASE_ANON_KEY = 'YOUR_SUPABASE_ANON_KEY_HERE';
+
+        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        const results = document.getElementById('results');
+        const logDiv = document.getElementById('log');
+
+        function log(msg, type = 'info') {
+            const timestamp = new Date().toLocaleTimeString();
+            logDiv.innerHTML += `[${timestamp}] ${msg}\n`;
+            logDiv.scrollTop = logDiv.scrollHeight;
+            console.log(msg);
+        }
+
+        function showResult(msg, type = 'error') {
+            const div = document.createElement('div');
+            div.className = type;
+            div.innerHTML = msg;
+            results.appendChild(div);
+        }
+
+        function clearResults() {
+            results.innerHTML = '';
+            logDiv.innerHTML = '';
+        }
+
+        async function testMinimalSignup() {
+            clearResults();
+            log('=== TEST 1: Minimal Signup ===');
+            
+            const email = document.getElementById('email1').value;
+            const password = document.getElementById('password1').value;
+
+            if (!email || !password) {
+                showResult('❌ Please enter email and password', 'error');
+                return;
+            }
+
+            log(`Attempting signup with email: ${email}`);
+            log('No metadata, no redirect URL');
+
+            try {
+                const { data, error } = await supabase.auth.signUp({
+                    email: email,
+                    password: password
+                });
+
+                if (error) {
+                    log(`❌ ERROR: ${error.message}`, 'error');
+                    log(`Error details: ${JSON.stringify(error, null, 2)}`);
+                    showResult(`❌ <strong>FAILED:</strong> ${error.message}<br><br><strong>Status:</strong> ${error.status || 'N/A'}<br><strong>Details:</strong> ${error.error_description || 'No additional details'}`, 'error');
+                } else {
+                    log(`✅ SUCCESS`);
+                    log(`User ID: ${data.user?.id}`);
+                    log(`Email: ${data.user?.email}`);
+                    log(`Confirmed: ${data.user?.email_confirmed_at ? 'Yes' : 'No (check email)'}`);
+                    log(`Session: ${data.session ? 'Created' : 'Not created (needs confirmation)'}`);
+                    showResult(`✅ <strong>SUCCESS!</strong><br>User created: ${data.user?.email}<br>User ID: ${data.user?.id}<br><br>${data.session ? '✅ Session created (auto-confirmed)' : '📧 Check email for confirmation link'}`, 'success');
+                }
+            } catch (err) {
+                log(`❌ EXCEPTION: ${err.message}`);
+                showResult(`❌ <strong>EXCEPTION:</strong> ${err.message}`, 'error');
+            }
+        }
+
+        async function testSignupWithMetadata() {
+            clearResults();
+            log('=== TEST 2: Signup with Metadata ===');
+            
+            const email = document.getElementById('email2').value;
+            const password = document.getElementById('password2').value;
+            const firstName = document.getElementById('firstName').value;
+            const lastName = document.getElementById('lastName').value;
+
+            if (!email || !password) {
+                showResult('❌ Please enter email and password', 'error');
+                return;
+            }
+
+            log(`Attempting signup with email: ${email}`);
+            log(`Metadata: first_name="${firstName}", last_name="${lastName}"`);
+            log(`Redirect URL: http://localhost/GameLend/auth.php?mode=login`);
+
+            try {
+                const { data, error } = await supabase.auth.signUp({
+                    email: email,
+                    password: password,
+                    options: {
+                        emailRedirectTo: 'http://localhost/GameLend/auth.php?mode=login',
+                        data: {
+                            first_name: firstName,
+                            last_name: lastName,
+                            role: 'customer'
+                        }
+                    }
+                });
+
+                if (error) {
+                    log(`❌ ERROR: ${error.message}`);
+                    log(`Error details: ${JSON.stringify(error, null, 2)}`);
+                    showResult(`❌ <strong>FAILED:</strong> ${error.message}<br><br><strong>This is the same error you're getting!</strong><br><br>Possible causes:<br>1. Database trigger error<br>2. Email confirmation disabled<br>3. Redirect URL not whitelisted<br>4. User metadata issue`, 'error');
+                } else {
+                    log(`✅ SUCCESS`);
+                    log(`User data: ${JSON.stringify(data.user, null, 2)}`);
+                    showResult(`✅ <strong>SUCCESS!</strong><br>User created with metadata<br>User ID: ${data.user?.id}`, 'success');
+                }
+            } catch (err) {
+                log(`❌ EXCEPTION: ${err.message}`);
+                showResult(`❌ <strong>EXCEPTION:</strong> ${err.message}`, 'error');
+            }
+        }
+
+        async function checkAuthSettings() {
+            clearResults();
+            log('=== TEST 3: Checking Auth Settings ===');
+            
+            showResult(`
+                <strong>✅ To check your Supabase settings:</strong><br><br>
+                1. Go to Supabase Dashboard<br>
+                2. Authentication → Settings<br><br>
+                <strong>Check these settings:</strong><br>
+                ☐ Email Auth: Enabled<br>
+                ☐ Confirm Email: ${document.querySelector('input[name="confirm"]:checked') ? 'Enabled' : 'Check in dashboard'}<br>
+                ☐ Site URL: http://localhost/GameLend<br>
+                ☐ Redirect URLs: Added http://localhost/GameLend/**<br><br>
+                <strong>Also check Database:</strong><br>
+                ☐ SQL Editor → Run: SELECT * FROM auth.users LIMIT 1;<br>
+                ☐ Check if trigger 'on_auth_user_created' exists<br>
+                ☐ Check trigger function 'handle_new_user()' for errors
+            `, 'info');
+        }
+
+        async function testSignupNoConfirm() {
+            clearResults();
+            log('=== TEST 4: Signup without Email Confirmation ===');
+            
+            const email = document.getElementById('email4').value;
+            const password = document.getElementById('password4').value;
+
+            if (!email || !password) {
+                showResult('❌ Please enter email and password', 'error');
+                return;
+            }
+
+            log(`Attempting signup: ${email}`);
+            log('This should work if email confirmation is DISABLED');
+
+            try {
+                const { data, error } = await supabase.auth.signUp({
+                    email: email,
+                    password: password,
+                    options: {
+                        data: {
+                            first_name: 'Test',
+                            last_name: 'User'
+                        }
+                    }
+                });
+
+                if (error) {
+                    log(`❌ ERROR: ${error.message}`);
+                    showResult(`❌ <strong>FAILED:</strong> ${error.message}<br><br>If you're still getting a 500 error, the problem is likely with your database trigger 'handle_new_user()'.`, 'error');
+                } else {
+                    log(`✅ SUCCESS`);
+                    if (data.session) {
+                        log(`✅ Session created immediately - Email confirmation is DISABLED`);
+                        showResult(`✅ <strong>SUCCESS!</strong> Email confirmation is DISABLED.<br>User was created and logged in immediately.<br><br>If you want email verification, enable it in Supabase.`, 'success');
+                    } else {
+                        log(`📧 Session not created - needs email confirmation`);
+                        showResult(`✅ User created but needs email confirmation.<br>Check your email inbox.`, 'success');
+                    }
+                }
+            } catch (err) {
+                log(`❌ EXCEPTION: ${err.message}`);
+                showResult(`❌ <strong>EXCEPTION:</strong> ${err.message}`, 'error');
+            }
+        }
+
+        log('🧪 Supabase Auth Debugging Tool Ready');
+        log(`Connected to: ${SUPABASE_URL}`);
+        log('Run tests above to diagnose the issue');
+    </script>
+</body>
+</html>

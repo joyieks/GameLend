@@ -1,5 +1,5 @@
 <?php
-session_start();
+require_once '../includes/session_config.php';
 
 // Include authentication check
 require_once '../includes/auth_check.php';
@@ -33,8 +33,8 @@ if($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['transaction_id'])) {
             $stmt = $pdo->prepare("UPDATE borrow_transactions SET return_date = NOW(), status = 'returned' WHERE id = ?");
             $stmt->execute([$transaction_id]);
             
-            // Update game status
-            $stmt = $pdo->prepare("UPDATE games SET status = 'available' WHERE id = ?");
+            // Update game status and increase available quantity
+            $stmt = $pdo->prepare("UPDATE games SET available_quantity = available_quantity + 1, status = CASE WHEN available_quantity + 1 > 0 THEN 'available' ELSE status END WHERE id = ?");
             $stmt->execute([$transaction['game_id']]);
             
             $pdo->commit();

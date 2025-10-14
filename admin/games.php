@@ -1,5 +1,5 @@
 <?php
-session_start();
+require_once '../includes/session_config.php';
 $page_title = "Manage Games";
 
 // Include authentication check

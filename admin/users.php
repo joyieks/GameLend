@@ -1,5 +1,5 @@
 <?php
-session_start();
+require_once '../includes/session_config.php';
 $page_title = "Manage Users";
 
 // Include authentication check
@@ -70,14 +70,26 @@ if($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['toggle_status'])) {
     }
 }
 
-// Get all users
+// Get all users (excluding admins from list, or include them - your choice)
+// Option 1: Show only customers
 $stmt = $pdo->query("SELECT u.*, 
                      COUNT(CASE WHEN bt.status = 'borrowed' THEN 1 END) as active_borrows,
                      COUNT(bt.id) as total_transactions
                      FROM users u 
                      LEFT JOIN borrow_transactions bt ON u.id = bt.user_id 
+                     WHERE u.role = 'customer'
                      GROUP BY u.id 
                      ORDER BY u.created_at DESC");
+
+// Option 2: Show all users including admins (comment out above and uncomment below)
+// $stmt = $pdo->query("SELECT u.*, 
+//                      COUNT(CASE WHEN bt.status = 'borrowed' THEN 1 END) as active_borrows,
+//                      COUNT(bt.id) as total_transactions
+//                      FROM users u 
+//                      LEFT JOIN borrow_transactions bt ON u.id = bt.user_id 
+//                      GROUP BY u.id 
+//                      ORDER BY u.role DESC, u.created_at DESC");
+
 $users = $stmt->fetchAll();
 
 include 'includes/admin_header.php';
@@ -178,9 +190,8 @@ include 'includes/admin_header.php';
                 <thead>
                     <tr>
                         <th>Name</th>
-                        <th>Username</th>
                         <th>Email</th>
-                        <th class="hide-lg">Gender</th>
+                        <th>Phone</th>
                         <th>Role</th>
                         <th>Status</th>
                         <th class="hide-lg">Active Borrows</th>
@@ -198,11 +209,8 @@ include 'includes/admin_header.php';
                                     <span class="badge badge-info">You</span>
                                 <?php endif; ?>
                             </td>
-                            <td><?php echo htmlspecialchars($user['username']); ?></td>
                             <td><?php echo htmlspecialchars($user['email']); ?></td>
-                            <td class="hide-lg">
-                                <span class="badge badge-info"><?php echo ucfirst(str_replace('_', ' ', $user['gender'])); ?></span>
-                            </td>
+                            <td><?php echo !empty($user['phone']) ? htmlspecialchars($user['phone']) : '<em style="color:#999;">Not provided</em>'; ?></td>
                             <td>
                                 <span class="badge badge-<?php echo $user['role'] === 'admin' ? 'danger' : 'primary'; ?>">
                                     <?php echo ucfirst($user['role']); ?>

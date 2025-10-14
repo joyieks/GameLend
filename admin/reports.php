@@ -1,5 +1,5 @@
 <?php
-session_start();
+require_once '../includes/session_config.php';
 $page_title = "Reports";
 
 // Include authentication check
@@ -43,21 +43,21 @@ $stmt = $pdo->query("SELECT bt.*, u.username, g.title, g.platform
                      LIMIT 20");
 $reports['recent_transactions'] = $stmt->fetchAll();
 
-// Overdue games
-$stmt = $pdo->query("SELECT bt.*, u.username, g.title, g.platform, 
-                     DATEDIFF(NOW(), bt.borrow_date) as days_overdue
+// Overdue games - PostgreSQL syntax
+$stmt = $pdo->query("SELECT bt.*, u.first_name, u.last_name, g.title, g.platform, 
+                     EXTRACT(DAY FROM (NOW() - bt.borrow_date)) as days_overdue
                      FROM borrow_transactions bt 
                      JOIN users u ON bt.user_id = u.id 
                      JOIN games g ON bt.game_id = g.id 
-                     WHERE bt.status = 'borrowed' AND bt.borrow_date < DATE_SUB(NOW(), INTERVAL 14 DAY)
+                     WHERE bt.status = 'borrowed' AND bt.borrow_date < NOW() - INTERVAL '14 days'
                      ORDER BY days_overdue DESC");
 $reports['overdue_games'] = $stmt->fetchAll();
 
-// Monthly borrowing trends (last 6 months)
-$stmt = $pdo->query("SELECT DATE_FORMAT(borrow_date, '%Y-%m') as month, COUNT(*) as count 
+// Monthly borrowing trends (last 6 months) - PostgreSQL syntax
+$stmt = $pdo->query("SELECT TO_CHAR(borrow_date, 'YYYY-MM') as month, COUNT(*) as count 
                      FROM borrow_transactions 
-                     WHERE borrow_date >= DATE_SUB(NOW(), INTERVAL 6 MONTH)
-                     GROUP BY DATE_FORMAT(borrow_date, '%Y-%m') 
+                     WHERE borrow_date >= NOW() - INTERVAL '6 months'
+                     GROUP BY TO_CHAR(borrow_date, 'YYYY-MM') 
                      ORDER BY month DESC");
 $reports['monthly_trends'] = $stmt->fetchAll();
 

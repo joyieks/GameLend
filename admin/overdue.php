@@ -1,5 +1,5 @@
 <?php
-session_start();
+require_once '../includes/session_config.php';
 $page_title = "Admin Overdue Games";
 
 // Include authentication check
@@ -40,14 +40,14 @@ if(isset($_POST['mark_returned'])) {
     }
 }
 
-// Get overdue games (borrowed more than 14 days ago)
-$sql = "SELECT bt.*, u.username, u.email, g.title, g.platform,
-        DATEDIFF(NOW(), bt.borrow_date) as days_overdue
+// Get overdue games (borrowed more than 14 days ago) - PostgreSQL syntax
+$sql = "SELECT bt.*, u.first_name, u.last_name, u.email, g.title, g.platform,
+        EXTRACT(DAY FROM (NOW() - bt.borrow_date)) as days_overdue
         FROM borrow_transactions bt 
         JOIN users u ON bt.user_id = u.id 
         JOIN games g ON bt.game_id = g.id 
         WHERE bt.status = 'borrowed' 
-        AND bt.borrow_date < DATE_SUB(NOW(), INTERVAL 14 DAY)
+        AND bt.borrow_date < NOW() - INTERVAL '14 days'
         ORDER BY bt.borrow_date ASC";
 
 $stmt = $pdo->query($sql);

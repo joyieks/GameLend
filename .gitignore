@@ -1,0 +1,75 @@
+# Environment Variables (NEVER COMMIT THESE!)
+.env
+.env.local
+.env.*.local
+
+# Sensitive Configuration Files
+includes/supabase_config.php.local
+db/db_connect.php.local
+
+# IDE and Editor Files
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+logs/
+*.log.*
+
+# Temporary Files
+*.tmp
+*.temp
+*.swp
+*.swo
+*~
+
+# Backup Files
+*.bak
+*.backup
+*.old
+
+# PHP
+vendor/
+composer.lock
+
+# Node.js (if you add frontend build tools later)
+node_modules/
+npm-debug.log
+yarn-error.log
+package-lock.json
+
+# Build and Cache
+.cache/
+dist/
+build/
+
+# OS Files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Desktop.ini
+
+# Test Files with Real Credentials
+test_supabase_auth_local.html
+
+# Database Dumps (may contain sensitive data)
+*.sql.backup
+database_backup_*.sql
+
+# Session Files
+sessions/
+tmp/
+
+# Uploaded Files (configure based on your needs)
+uploads/private/
+
+# Documentation with exposed credentials
+# (uncomment if you have docs with real creds)
+# docs/*_CREDENTIALS.md

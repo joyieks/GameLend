@@ -1,11 +1,11 @@
 FROM php:8.2-apache
 
-# Install system deps and PHP extensions
+# Install system deps and PHP extensions (Postgres only)
 RUN apt-get update \
  && apt-get install -y --no-install-recommends \
         libpng-dev libjpeg-dev libfreetype6-dev \
-        libonig-dev libzip-dev zip unzip curl \
- && docker-php-ext-install pdo pdo_mysql \
+        libonig-dev libzip-dev zip unzip curl libpq-dev \
+ && docker-php-ext-install pdo pdo_pgsql \
  && rm -rf /var/lib/apt/lists/*
 
 # Enable Apache mods

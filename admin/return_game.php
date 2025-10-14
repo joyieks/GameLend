@@ -1,5 +1,5 @@
 <?php
-session_start();
+require_once '../includes/session_config.php';
 
 // Include authentication check
 require_once '../includes/auth_check.php';

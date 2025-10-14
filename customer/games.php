@@ -1,5 +1,5 @@
 <?php
-session_start();
+require_once '../includes/session_config.php';
 $page_title = "Games";
 
 // Include authentication check
@@ -20,11 +20,11 @@ if(isset($_POST['borrow_game'])) {
     $user_id = $_SESSION['user_id'];
     
     // Check if game is available
-    $stmt = $pdo->prepare("SELECT status FROM games WHERE id = ?");
+    $stmt = $pdo->prepare("SELECT status, available_quantity FROM games WHERE id = ?");
     $stmt->execute([$game_id]);
     $game = $stmt->fetch();
     
-    if($game && $game['status'] === 'available') {
+    if($game && $game['status'] !== 'maintenance' && $game['available_quantity'] > 0) {
         // Check if user already has this game borrowed
         $stmt = $pdo->prepare("SELECT id FROM borrow_transactions WHERE user_id = ? AND game_id = ? AND status = 'borrowed'");
         $stmt->execute([$user_id, $game_id]);
@@ -34,19 +34,19 @@ if(isset($_POST['borrow_game'])) {
             $pdo->beginTransaction();
             
             try {
-                // Update game status
-                $stmt = $pdo->prepare("UPDATE games SET status = 'borrowed' WHERE id = ?");
+                // Update game status and decrease available quantity
+                $stmt = $pdo->prepare("UPDATE games SET available_quantity = available_quantity - 1, status = CASE WHEN available_quantity - 1 = 0 THEN 'borrowed' ELSE status END WHERE id = ?");
                 $stmt->execute([$game_id]);
                 
-                // Create borrow transaction
-                $stmt = $pdo->prepare("INSERT INTO borrow_transactions (user_id, game_id, borrow_date, status) VALUES (?, ?, NOW(), 'borrowed')");
+                // Create borrow transaction with due date (14 days from now)
+                $stmt = $pdo->prepare("INSERT INTO borrow_transactions (user_id, game_id, borrow_date, due_date, status) VALUES (?, ?, NOW(), NOW() + INTERVAL '14 days', 'borrowed')");
                 $stmt->execute([$user_id, $game_id]);
                 
                 $pdo->commit();
-                $success_message = "Game borrowed successfully!";
+                $success_message = "Game borrowed successfully! Please return within 14 days.";
             } catch(Exception $e) {
                 $pdo->rollback();
-                $error_message = "Failed to borrow game. Please try again.";
+                $error_message = "Failed to borrow game. Please try again. Error: " . $e->getMessage();
             }
         } else {
             $error_message = "You already have this game borrowed.";
@@ -408,16 +408,21 @@ include 'includes/customer_header.php';
                     <div class="game-card-body">
                         <div class="game-info">
                             <p><strong>Platform:</strong> <?php echo htmlspecialchars($game['platform']); ?></p>
+                            <p><strong>Available:</strong> <?php echo $game['available_quantity']; ?> / <?php echo $game['total_quantity']; ?></p>
                             <p><strong>Status:</strong> 
-                                <span class="badge badge-<?php echo $game['status']; ?>">
-                                    <?php echo ucfirst($game['status']); ?>
-                                </span>
+                                <?php if($game['status'] === 'maintenance'): ?>
+                                    <span class="badge badge-maintenance">Maintenance</span>
+                                <?php elseif($game['available_quantity'] > 0): ?>
+                                    <span class="badge badge-available">Available</span>
+                                <?php else: ?>
+                                    <span class="badge badge-borrowed">All Borrowed</span>
+                                <?php endif; ?>
                             </p>
                         </div>
                     </div>
                     
                     <div class="game-card-footer">
-                        <?php if($game['status'] === 'available'): ?>
+                        <?php if($game['status'] !== 'maintenance' && $game['available_quantity'] > 0): ?>
                             <form method="POST">
                                 <input type="hidden" name="game_id" value="<?php echo $game['id']; ?>">
                                 <button type="submit" name="borrow_game" class="btn btn-success" 
@@ -426,10 +431,10 @@ include 'includes/customer_header.php';
                                     <i class="fas fa-hand-holding"></i> Borrow Game
                                 </button>
                             </form>
-                        <?php elseif($game['status'] === 'borrowed'): ?>
-                            <p class="text-muted" style="text-align: center;">Currently borrowed</p>
                         <?php elseif($game['status'] === 'maintenance'): ?>
                             <p class="text-muted" style="text-align: center;">Under maintenance</p>
+                        <?php else: ?>
+                            <p class="text-muted" style="text-align: center;">All copies borrowed</p>
                         <?php endif; ?>
                     </div>
                 </div>

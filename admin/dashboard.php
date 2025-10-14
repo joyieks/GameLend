@@ -1,16 +1,6 @@
 <?php
-session_start();
+require_once '../includes/session_config.php';
 $page_title = "Admin Dashboard";
-
-// Include authentication check
-require_once '../includes/auth_check.php';
-
-// Set security headers
-setSecurityHeaders();
-
-// Validate session and require admin access
-validateSession();
-requireAdmin();
 
 require_once '../db/db_connect.php';
 
@@ -39,11 +29,11 @@ $stats['total_transactions'] = $stmt->fetch()['count'];
 
 // Overdue games (borrowed more than 14 days ago)
 $stmt = $pdo->query("SELECT COUNT(*) as count FROM borrow_transactions 
-                     WHERE status = 'borrowed' AND borrow_date < DATE_SUB(NOW(), INTERVAL 14 DAY)");
+                     WHERE status = 'borrowed' AND borrow_date < NOW() - INTERVAL '14 days'");
 $stats['overdue_games'] = $stmt->fetch()['count'];
 
 // Recent transactions
-$stmt = $pdo->query("SELECT bt.*, u.username, g.title, g.platform 
+$stmt = $pdo->query("SELECT bt.*, u.first_name, u.last_name, g.title, g.platform 
                      FROM borrow_transactions bt 
                      JOIN users u ON bt.user_id = u.id 
                      JOIN games g ON bt.game_id = g.id 
@@ -118,7 +108,7 @@ include 'includes/admin_header.php';
         <div>
             <p><strong>Welcome, <?php echo htmlspecialchars($_SESSION['first_name'] . ' ' . $_SESSION['last_name']); ?>!</strong></p>
             <p><strong>Role:</strong> Administrator</p>
-            <p><strong>Username:</strong> <?php echo htmlspecialchars($_SESSION['username']); ?></p>
+            <p><strong>Email:</strong> <?php echo htmlspecialchars($_SESSION['email']); ?></p>
         </div>
         <a href="profile.php" class="btn btn-primary">
             <i class="fas fa-user-shield"></i> Manage Profile
@@ -148,7 +138,7 @@ include 'includes/admin_header.php';
             <tbody>
                 <?php foreach($recent_transactions as $transaction): ?>
                     <tr>
-                        <td><?php echo htmlspecialchars($transaction['username']); ?></td>
+                        <td><?php echo htmlspecialchars($transaction['first_name'] . ' ' . $transaction['last_name']); ?></td>
                         <td><?php echo htmlspecialchars($transaction['title']); ?></td>
                         <td><?php echo htmlspecialchars($transaction['platform']); ?></td>
                         <td><?php echo date('M j, Y', strtotime($transaction['borrow_date'])); ?></td>

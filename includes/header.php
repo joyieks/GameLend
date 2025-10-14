@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -266,22 +266,7 @@
                 <i class="fas fa-bars"></i>
             </button>
             <ul class="nav-menu" id="navMenu">
-                <li><a href="index.php">Home</a></li>
-                <li><a href="games.php">Games</a></li>
-                <?php if(isset($_SESSION['user_id'])): ?>
-                    <?php if($_SESSION['role'] === 'admin'): ?>
-                        <li><a href="admin/dashboard.php">Admin Dashboard</a></li>
-                    <?php else: ?>
-                        <li><a href="customer/dashboard.php">My Dashboard</a></li>
-                    <?php endif; ?>
-                    <li><a href="logout.php" class="logout">
-                        <i class="fas fa-sign-out-alt"></i>
-                        Logout (<?php echo htmlspecialchars($_SESSION['username']); ?>)
-                    </a></li>
-                <?php else: ?>
-                    <li><a href="login.php">Login</a></li>
-                    <li><a href="register.php">Register</a></li>
-                <?php endif; ?>
+                <!-- Login and Register buttons removed - use direct URLs instead -->
             </ul>
         </nav>
     </header>

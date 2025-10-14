@@ -1,5 +1,5 @@
 <?php
-session_start();
+require_once 'includes/session_config.php';
 $page_title = "Home";
 require_once 'db/db_connect.php';
 include 'includes/header.php';
@@ -225,26 +225,25 @@ include 'includes/header.php';
             <a href="register.php" class="btn btn-primary">Get Started</a>
             <a href="login.php" class="btn btn-success">Login</a>
         </div>
+    <?php else: ?>
+        <?php
+        // User is logged in, show appropriate dashboard button
+        $dashboard_url = ($_SESSION['role'] ?? 'customer') === 'admin' 
+            ? 'admin/dashboard.php' 
+            : 'customer/dashboard.php';
+        $role_name = ($_SESSION['role'] ?? 'customer') === 'admin' ? 'Admin' : 'Customer';
+        ?>
+        <div class="actions">
+            <a href="<?php echo $dashboard_url; ?>" class="btn btn-primary">
+                <i class="fas fa-tachometer-alt"></i> Go to <?php echo $role_name; ?> Dashboard
+            </a>
+            <a href="logout.php" class="btn btn-warning">
+                <i class="fas fa-sign-out-alt"></i> Logout
+            </a>
+        </div>
     <?php endif; ?>
 </div>
 
 <!-- Removed the informational cards section for a cleaner landing page -->
-
-<?php if(isset($_SESSION['user_id'])): ?>
-    <div class="quick-actions">
-        <h2 style="margin-top: 0;">Quick Actions</h2>
-        <div class="grid">
-            <?php if($_SESSION['role'] === 'admin'): ?>
-                <a href="admin/dashboard.php" class="btn btn-primary">Admin Dashboard</a>
-                <a href="admin/games.php" class="btn btn-success">Manage Games</a>
-                <a href="admin/reports.php" class="btn btn-warning">View Reports</a>
-            <?php else: ?>
-                <a href="customer/dashboard.php" class="btn btn-primary">My Dashboard</a>
-                <a href="customer/borrowed.php" class="btn btn-success">Borrowed Games</a>
-                <a href="games.php" class="btn btn-warning">Browse Games</a>
-            <?php endif; ?>
-        </div>
-    </div>
-<?php endif; ?>
 
 <?php include 'includes/footer.php'; ?>

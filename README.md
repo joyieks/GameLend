@@ -1,6 +1,6 @@
 # GameLend: Video Game Borrow & Return System
 
-A complete PHP + MySQL web application for managing video game borrowing and returning operations.
+A complete PHP + Postgres (Supabase) web application for managing video game borrowing and returning operations.
 
 ## Features
 
@@ -23,17 +23,15 @@ A complete PHP + MySQL web application for managing video game borrowing and ret
 
 ## System Requirements
 
-- **Web Server**: XAMPP (Apache + MySQL + PHP)
-- **PHP Version**: 7.4 or higher
-- **MySQL Version**: 5.7 or higher
+- **Web Server**: Apache + PHP
+- **PHP Version**: 8.0 or higher
+- **Database**: Postgres (Supabase)
 - **Browser**: Modern web browser with JavaScript enabled
 
 ## Installation & Setup
 
-### 1. Install XAMPP
-1. Download XAMPP from [https://www.apachefriends.org/](https://www.apachefriends.org/)
-2. Install XAMPP on your system
-3. Start Apache and MySQL services
+### 1. Server
+Use Apache/PHP locally (XAMPP/other) or Docker (see Dockerfile). Start Apache.
 
 ### 2. Project Setup
 1. Copy the `GameLend` folder to your XAMPP htdocs directory:
@@ -41,22 +39,20 @@ A complete PHP + MySQL web application for managing video game borrowing and ret
    - macOS: `/Applications/XAMPP/htdocs/GameLend/`
    - Linux: `/opt/lampp/htdocs/GameLend/`
 
-### 3. Database Setup
-1. Open your web browser and go to `http://localhost/phpmyadmin`
-2. Create a new database named `gamelend_db`
-3. Import the SQL file: `GameLend/db/gamelend_db.sql`
-4. The database will be created with sample data
+### 3. Database Setup (Supabase)
+1. Create a Supabase project (Postgres database).
+2. Open the Supabase SQL editor and run: `db/postgres_schema.sql`.
+3. Optionally seed data manually via SQL inserts.
 
 ### 4. Configuration
-1. Open `GameLend/db/db_connect.php`
-2. Verify the database connection settings:
-   ```php
-   $host = 'localhost';
-   $dbname = 'gamelend_db';
-   $username = 'root';
-   $password = '';
-   ```
-3. Adjust if your MySQL credentials are different
+Set environment variables (Apache, .env loader, or system env):
+
+- `DB_HOST` = your Supabase host
+- `DB_PORT` = 5432
+- `DB_NAME` = your database name
+- `DB_USER` = database user (e.g., postgres)
+- `DB_PASSWORD` = database password
+- Or `DATABASE_URL` = `postgres://USER:PASS@HOST:5432/DBNAME`
 
 ### 5. Access the Application
 1. Open your web browser
@@ -91,8 +87,9 @@ GameLend/
 │   └── js/
 │       └── script.js    # JavaScript functionality
 ├── db/                   # Database files
-│   ├── db_connect.php   # Database connection
-│   └── gamelend_db.sql  # Database schema and sample data
+│   ├── db_connect.php       # Database connection (Postgres)
+│   ├── postgres_schema.sql  # Postgres schema
+│   └── add_password_resets.sql # Optional: legacy migration
 ├── includes/             # Reusable components
 │   ├── header.php       # Page header
 │   └── footer.php       # Page footer
@@ -104,7 +101,7 @@ GameLend/
 └── README.md            # This file
 ```
 
-## Database Schema
+## Database Schema (Postgres)
 
 ### Users Table
 - `id` - Primary key

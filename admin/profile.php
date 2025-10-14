@@ -1,5 +1,5 @@
 <?php
-session_start();
+require_once '../includes/session_config.php';
 $page_title = "My Profile";
 
 // Include authentication check
@@ -21,13 +21,14 @@ $message_type = '';
 // Handle profile update
 if($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['update_profile'])) {
     $first_name = trim($_POST['first_name']);
+    $middle_name = trim($_POST['middle_name']);
     $last_name = trim($_POST['last_name']);
-    $gender = $_POST['gender'];
+    $phone = trim($_POST['phone']);
     $email = trim($_POST['email']);
     
     // Validation
-    if(empty($first_name) || empty($last_name) || empty($gender) || empty($email)) {
-        $message = 'All fields are required';
+    if(empty($first_name) || empty($last_name) || empty($email)) {
+        $message = 'First name, last name, and email are required';
         $message_type = 'danger';
     } elseif(strlen($first_name) < 2) {
         $message = 'First name must be at least 2 characters long';
@@ -48,13 +49,14 @@ if($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['update_profile'])) {
             $message_type = 'danger';
         } else {
             // Update user profile
-            $stmt = $pdo->prepare("UPDATE users SET first_name = ?, last_name = ?, gender = ?, email = ?, updated_at = NOW() WHERE id = ?");
+            $stmt = $pdo->prepare("UPDATE users SET first_name = ?, middle_name = ?, last_name = ?, phone = ?, email = ?, updated_at = NOW() WHERE id = ?");
             
-            if($stmt->execute([$first_name, $last_name, $gender, $email, $user_id])) {
+            if($stmt->execute([$first_name, $middle_name, $last_name, $phone, $email, $user_id])) {
                 // Update session variables
                 $_SESSION['first_name'] = $first_name;
+                $_SESSION['middle_name'] = $middle_name;
                 $_SESSION['last_name'] = $last_name;
-                $_SESSION['gender'] = $gender;
+                $_SESSION['email'] = $email;
                 
                 $message = 'Profile updated successfully';
                 $message_type = 'success';
@@ -66,45 +68,9 @@ if($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['update_profile'])) {
     }
 }
 
-// Handle password change
-if($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['change_password'])) {
-    $current_password = $_POST['current_password'];
-    $new_password = $_POST['new_password'];
-    $confirm_password = $_POST['confirm_password'];
-    
-    if(empty($current_password) || empty($new_password) || empty($confirm_password)) {
-        $message = 'All password fields are required';
-        $message_type = 'danger';
-    } elseif($new_password !== $confirm_password) {
-        $message = 'New passwords do not match';
-        $message_type = 'danger';
-    } elseif(strlen($new_password) < 6) {
-        $message = 'New password must be at least 6 characters long';
-        $message_type = 'danger';
-    } else {
-        // Verify current password
-        $stmt = $pdo->prepare("SELECT password FROM users WHERE id = ?");
-        $stmt->execute([$user_id]);
-        $user = $stmt->fetch();
-        
-        if(password_verify($current_password, $user['password'])) {
-            // Update password
-            $hashed_password = password_hash($new_password, PASSWORD_DEFAULT);
-            $stmt = $pdo->prepare("UPDATE users SET password = ?, updated_at = NOW() WHERE id = ?");
-            
-            if($stmt->execute([$hashed_password, $user_id])) {
-                $message = 'Password changed successfully';
-                $message_type = 'success';
-            } else {
-                $message = 'Failed to change password. Please try again.';
-                $message_type = 'danger';
-            }
-        } else {
-            $message = 'Current password is incorrect';
-            $message_type = 'danger';
-        }
-    }
-}
+// TODO: Password changes now handled by Supabase Auth
+// Users should use the "Forgot Password" feature or Supabase dashboard
+// To implement: Use Supabase Auth API to update password
 
 // Get current user information
 $stmt = $pdo->prepare("SELECT * FROM users WHERE id = ?");
@@ -134,9 +100,9 @@ $stats['borrowed_games'] = $stmt->fetch()['count'];
 $stmt = $pdo->query("SELECT COUNT(*) as count FROM borrow_transactions");
 $stats['total_transactions'] = $stmt->fetch()['count'];
 
-// Overdue games
+// Overdue games (borrowed more than 14 days ago) - PostgreSQL syntax
 $stmt = $pdo->query("SELECT COUNT(*) as count FROM borrow_transactions 
-                     WHERE status = 'borrowed' AND borrow_date < DATE_SUB(NOW(), INTERVAL 14 DAY)");
+                     WHERE status = 'borrowed' AND borrow_date < NOW() - INTERVAL '14 days'");
 $stats['overdue_games'] = $stmt->fetch()['count'];
 
 include 'includes/admin_header.php';
@@ -202,6 +168,34 @@ include 'includes/admin_header.php';
         padding: 0.3rem 1rem;
         border-radius: 20px;
         display: inline-block;
+    }
+    
+    .logout-button {
+        display: inline-block;
+        margin-top: 1.5rem;
+        padding: 0.75rem 2rem;
+        background: rgba(255, 59, 48, 0.9);
+        color: white;
+        text-decoration: none;
+        border-radius: 25px;
+        font-weight: 600;
+        font-size: 1rem;
+        transition: all 0.3s ease;
+        border: 2px solid rgba(255, 255, 255, 0.3);
+        position: relative;
+        z-index: 1;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+    }
+    
+    .logout-button:hover {
+        background: rgba(255, 59, 48, 1);
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(255, 59, 48, 0.4);
+        border-color: rgba(255, 255, 255, 0.5);
+    }
+    
+    .logout-button i {
+        margin-right: 0.5rem;
     }
     
     .profile-stats {
@@ -436,6 +430,10 @@ include 'includes/admin_header.php';
         </div>
         <h1 class="profile-name"><?php echo htmlspecialchars($user['first_name'] . ' ' . $user['last_name']); ?></h1>
         <p class="profile-role">Administrator <span class="admin-badge">ADMIN</span></p>
+        <a href="../logout.php" class="logout-button" onclick="return confirm('Are you sure you want to logout?');">
+            <i class="fas fa-sign-out-alt"></i>
+            Logout
+        </a>
         
         <div class="profile-stats">
             <div class="stat-card">
@@ -485,16 +483,12 @@ include 'includes/admin_header.php';
                 <span class="info-value"><?php echo htmlspecialchars($user['first_name'] . ' ' . $user['last_name']); ?></span>
             </div>
             <div class="info-item">
-                <span class="info-label">Username:</span>
-                <span class="info-value"><?php echo htmlspecialchars($user['username']); ?></span>
-            </div>
-            <div class="info-item">
                 <span class="info-label">Email:</span>
                 <span class="info-value"><?php echo htmlspecialchars($user['email']); ?></span>
             </div>
             <div class="info-item">
-                <span class="info-label">Gender:</span>
-                <span class="info-value"><?php echo ucfirst(str_replace('_', ' ', $user['gender'])); ?></span>
+                <span class="info-label">Phone:</span>
+                <span class="info-value"><?php echo !empty($user['phone']) ? htmlspecialchars($user['phone']) : 'Not provided'; ?></span>
             </div>
             <div class="info-item">
                 <span class="info-label">Role:</span>
@@ -527,19 +521,23 @@ include 'includes/admin_header.php';
                 </div>
                 
                 <div class="form-group">
+                    <label for="middle_name" class="form-label">Middle Name</label>
+                    <input type="text" id="middle_name" name="middle_name" class="form-control" 
+                           value="<?php echo htmlspecialchars($user['middle_name'] ?? ''); ?>" 
+                           placeholder="Optional">
+                </div>
+                
+                <div class="form-group">
                     <label for="last_name" class="form-label">Last Name</label>
                     <input type="text" id="last_name" name="last_name" class="form-control" 
                            value="<?php echo htmlspecialchars($user['last_name']); ?>" required>
                 </div>
                 
                 <div class="form-group">
-                    <label for="gender" class="form-label">Gender</label>
-                    <select id="gender" name="gender" class="form-control" required>
-                        <option value="male" <?php echo $user['gender'] === 'male' ? 'selected' : ''; ?>>Male</option>
-                        <option value="female" <?php echo $user['gender'] === 'female' ? 'selected' : ''; ?>>Female</option>
-                        <option value="other" <?php echo $user['gender'] === 'other' ? 'selected' : ''; ?>>Other</option>
-                        <option value="prefer_not_to_say" <?php echo $user['gender'] === 'prefer_not_to_say' ? 'selected' : ''; ?>>Prefer not to say</option>
-                    </select>
+                    <label for="phone" class="form-label">Phone Number</label>
+                    <input type="tel" id="phone" name="phone" class="form-control" 
+                           value="<?php echo htmlspecialchars($user['phone'] ?? ''); ?>" 
+                           placeholder="Optional">
                 </div>
                 
                 <div class="form-group">
@@ -562,43 +560,17 @@ include 'includes/admin_header.php';
             Change Password
         </h2>
         
-        <form method="POST">
-            <input type="hidden" name="change_password" value="1">
-            
-            <div class="form-group">
-                <label for="current_password" class="form-label">Current Password</label>
-                <div class="password-container">
-                    <input type="password" id="current_password" name="current_password" class="form-control" required>
-                    <button type="button" class="toggle-password" onclick="togglePasswordVisibility('current_password')">
-                        <i class="fas fa-eye"></i>
-                    </button>
-                </div>
-            </div>
-            
-            <div class="form-group">
-                <label for="new_password" class="form-label">New Password</label>
-                <div class="password-container">
-                    <input type="password" id="new_password" name="new_password" class="form-control" required>
-                    <button type="button" class="toggle-password" onclick="togglePasswordVisibility('new_password')">
-                        <i class="fas fa-eye"></i>
-                    </button>
-                </div>
-            </div>
-            
-            <div class="form-group">
-                <label for="confirm_password" class="form-label">Confirm New Password</label>
-                <div class="password-container">
-                    <input type="password" id="confirm_password" name="confirm_password" class="form-control" required>
-                    <button type="button" class="toggle-password" onclick="togglePasswordVisibility('confirm_password')">
-                        <i class="fas fa-eye"></i>
-                    </button>
-                </div>
-            </div>
-            
-            <button type="submit" class="btn btn-success">
-                <i class="fas fa-key"></i> Change Password
-            </button>
-        </form>
+        <div class="alert alert-info" style="margin: 1rem 0;">
+            <i class="fas fa-info-circle"></i>
+            <strong>Password management is handled by Supabase Auth.</strong>
+            <p style="margin-top: 0.5rem;">To change your password:</p>
+            <ol style="margin-left: 1.5rem; margin-top: 0.5rem;">
+                <li>Log out of your account</li>
+                <li>Click "Forgot Password" on the login page</li>
+                <li>Check your email for the password reset link</li>
+                <li>Follow the instructions to set a new password</li>
+            </ol>
+        </div>
     </div>
 </div>
 
