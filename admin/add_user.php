@@ -351,7 +351,7 @@ form.addEventListener('submit', async (e) => {
                     phone: userData.phone,
                     role: userData.role
                 },
-                emailRedirectTo: 'http://localhost/GameLend/login.php'
+                emailRedirectTo: window.location.origin + '/login.php'
             }
         });
         

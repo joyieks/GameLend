@@ -186,7 +186,7 @@ document.getElementById('registerForm').addEventListener('submit', async (e) => 
   }
 
   // Build redirect URL for email confirmation
-  const redirectTo = window.location.origin + '/GameLend/login.php';
+  const redirectTo = window.location.origin + '/login.php';
 
   // Use Supabase signUp with email confirmation
   const { data, error } = await supabase.auth.signUp({
