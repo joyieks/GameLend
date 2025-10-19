@@ -35,7 +35,7 @@ $stmt = $pdo->query("SELECT g.title, g.platform, COUNT(bt.id) as borrow_count
 $reports['most_borrowed'] = $stmt->fetchAll();
 
 // Recent transactions
-$stmt = $pdo->query("SELECT bt.*, u.username, g.title, g.platform 
+$stmt = $pdo->query("SELECT bt.*, u.first_name, u.last_name, u.email, g.title, g.platform 
                      FROM borrow_transactions bt 
                      JOIN users u ON bt.user_id = u.id 
                      JOIN games g ON bt.game_id = g.id 
@@ -164,7 +164,7 @@ include 'includes/admin_header.php';
             <tbody>
                 <?php foreach($reports['overdue_games'] as $game): ?>
                     <tr>
-                        <td><?php echo htmlspecialchars($game['username']); ?></td>
+                        <td><?php echo htmlspecialchars($game['first_name'] . ' ' . $game['last_name']); ?></td>
                         <td><?php echo htmlspecialchars($game['title']); ?></td>
                         <td><?php echo htmlspecialchars($game['platform']); ?></td>
                         <td><?php echo date('M j, Y', strtotime($game['borrow_date'])); ?></td>
@@ -232,7 +232,7 @@ include 'includes/admin_header.php';
             <tbody>
                 <?php foreach($reports['recent_transactions'] as $transaction): ?>
                     <tr>
-                        <td><?php echo htmlspecialchars($transaction['username']); ?></td>
+                        <td><?php echo htmlspecialchars($transaction['first_name'] . ' ' . $transaction['last_name']); ?></td>
                         <td><?php echo htmlspecialchars($transaction['title']); ?></td>
                         <td><?php echo htmlspecialchars($transaction['platform']); ?></td>
                         <td><?php echo date('M j, Y', strtotime($transaction['borrow_date'])); ?></td>

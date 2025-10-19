@@ -13,16 +13,21 @@ validateSession();
 requireCustomer();
 
 require_once '../db/db_connect.php';
+require_once '../includes/settings_helper.php';
 
 $user_id = $_SESSION['user_id'];
 
-// Get user information
+// Get borrow duration from settings
+$borrow_duration = getBorrowDuration();
+
+// Get user info
 $stmt = $pdo->prepare("SELECT * FROM users WHERE id = ?");
 $stmt->execute([$user_id]);
 $user = $stmt->fetch();
 
 // Get currently borrowed games
-$stmt = $pdo->prepare("SELECT bt.*, g.title, g.platform, g.status 
+$stmt = $pdo->prepare("SELECT bt.id as transaction_id, bt.borrow_date, bt.due_date, bt.status, 
+                       g.id as game_id, g.title, g.platform, g.status as game_status 
                        FROM borrow_transactions bt 
                        JOIN games g ON bt.game_id = g.id 
                        WHERE bt.user_id = ? AND bt.status = 'borrowed' 
@@ -47,7 +52,7 @@ foreach($borrowed_games as $game) {
     $borrow_date = new DateTime($game['borrow_date']);
     $now = new DateTime();
     $diff = $now->diff($borrow_date);
-    if($diff->days > 14) {
+    if($diff->days > $borrow_duration) {
         $overdue_count++;
     }
 }
@@ -98,8 +103,8 @@ include 'includes/customer_header.php';
                 $borrow_date = new DateTime($game['borrow_date']);
                 $now = new DateTime();
                 $diff = $now->diff($borrow_date);
-                $days_remaining = 14 - $diff->days;
-                $is_overdue = $diff->days > 14;
+                $days_remaining = $borrow_duration - $diff->days;
+                $is_overdue = $diff->days > $borrow_duration;
                 ?>
                 
                 <div class="card">
@@ -112,15 +117,15 @@ include 'includes/customer_header.php';
                     
                     <?php if($is_overdue): ?>
                         <p class="text-danger"><strong>Status:</strong> OVERDUE!</p>
-                        <p class="text-danger">Days overdue: <?php echo $diff->days - 14; ?></p>
+                        <p class="text-danger">Days overdue: <?php echo $diff->days - $borrow_duration; ?></p>
                     <?php else: ?>
                         <p class="text-success"><strong>Days remaining:</strong> <?php echo $days_remaining; ?></p>
                     <?php endif; ?>
                     
                     <form method="POST" action="return_game.php" style="margin-top: 1rem;">
-                        <input type="hidden" name="transaction_id" value="<?php echo $game['id']; ?>">
+                        <input type="hidden" name="transaction_id" value="<?php echo $game['transaction_id']; ?>">
                         <button type="submit" class="btn btn-success" 
-                                data-confirm="Are you sure you want to return this game?">
+                                onclick="return confirm('Are you sure you want to return this game?');">
                             <i class="fas fa-undo"></i> Return Game
                         </button>
                     </form>

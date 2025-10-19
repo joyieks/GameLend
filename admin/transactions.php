@@ -58,7 +58,9 @@ if($status_filter) {
 }
 
 if($user_filter) {
-    $where_conditions[] = "u.username LIKE ?";
+    $where_conditions[] = "(u.first_name LIKE ? OR u.last_name LIKE ? OR u.email LIKE ?)";
+    $params[] = "%$user_filter%";
+    $params[] = "%$user_filter%";
     $params[] = "%$user_filter%";
 }
 
@@ -69,7 +71,7 @@ if($date_filter) {
 
 $where_clause = $where_conditions ? 'WHERE ' . implode(' AND ', $where_conditions) : '';
 
-$sql = "SELECT bt.*, u.username, u.email, g.title, g.platform, g.status as game_status
+$sql = "SELECT bt.*, u.first_name, u.last_name, u.email, g.title, g.platform, g.status as game_status
         FROM borrow_transactions bt 
         JOIN users u ON bt.user_id = u.id 
         JOIN games g ON bt.game_id = g.id 
@@ -398,7 +400,7 @@ include 'includes/admin_header.php';
                         <?php foreach($transactions as $transaction): ?>
                             <tr>
                                 <td>
-                                    <strong><?php echo htmlspecialchars($transaction['username']); ?></strong><br>
+                                    <strong><?php echo htmlspecialchars($transaction['first_name'] . ' ' . $transaction['last_name']); ?></strong><br>
                                     <small><?php echo htmlspecialchars($transaction['email']); ?></small>
                                 </td>
                                 <td>

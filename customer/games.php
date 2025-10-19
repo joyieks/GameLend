@@ -13,6 +13,7 @@ validateSession();
 requireCustomer();
 
 require_once '../db/db_connect.php';
+require_once '../includes/settings_helper.php';
 
 // Handle borrow action
 if(isset($_POST['borrow_game'])) {
@@ -34,18 +35,34 @@ if(isset($_POST['borrow_game'])) {
             $pdo->beginTransaction();
             
             try {
-                // Update game status and decrease available quantity
-                $stmt = $pdo->prepare("UPDATE games SET available_quantity = available_quantity - 1, status = CASE WHEN available_quantity - 1 = 0 THEN 'borrowed' ELSE status END WHERE id = ?");
-                $stmt->execute([$game_id]);
+                // Get borrow duration from settings (defaults to 14 if table doesn't exist)
+                $borrow_duration = getBorrowDuration();
                 
-                // Create borrow transaction with due date (14 days from now)
-                $stmt = $pdo->prepare("INSERT INTO borrow_transactions (user_id, game_id, borrow_date, due_date, status) VALUES (?, ?, NOW(), NOW() + INTERVAL '14 days', 'borrowed')");
-                $stmt->execute([$user_id, $game_id]);
+                // Calculate due date using PHP
+                $due_date = date('Y-m-d H:i:s', strtotime("+$borrow_duration days"));
+                
+                // Manually update game availability FIRST (don't rely on trigger)
+                $stmt = $pdo->prepare("UPDATE games SET available_quantity = available_quantity - 1, status = CASE WHEN available_quantity - 1 = 0 THEN 'borrowed' ELSE status END WHERE id = ?");
+                $updateResult = $stmt->execute([$game_id]);
+                
+                if (!$updateResult) {
+                    throw new Exception("Failed to update game availability");
+                }
+                
+                // Create borrow transaction
+                $stmt = $pdo->prepare("INSERT INTO borrow_transactions (user_id, game_id, borrow_date, due_date, status) VALUES (?, ?, NOW(), ?, 'borrowed')");
+                $insertResult = $stmt->execute([$user_id, $game_id, $due_date]);
+                
+                if (!$insertResult) {
+                    throw new Exception("Failed to insert borrow transaction");
+                }
                 
                 $pdo->commit();
-                $success_message = "Game borrowed successfully! Please return within 14 days.";
+                $success_message = "Game borrowed successfully! Please return within $borrow_duration days.";
             } catch(Exception $e) {
                 $pdo->rollback();
+                // Log detailed error for debugging
+                error_log("Borrow Error - User: $user_id, Game: $game_id, Error: " . $e->getMessage());
                 $error_message = "Failed to borrow game. Please try again. Error: " . $e->getMessage();
             }
         } else {

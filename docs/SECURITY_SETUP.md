@@ -33,12 +33,12 @@ This guide explains how to properly manage sensitive credentials in the GameLend
 
 2. **Verify your `.env` file contains:**
    ```env
-   SUPABASE_URL=https://ecyncrgyvyepppgelczk.supabase.co
+   SUPABASE_URL=https://your-project-ref.supabase.co
    SUPABASE_ANON_KEY=your-anon-key
    DB_HOST=aws-1-us-east-2.pooler.supabase.com
    DB_PORT=6543
    DB_NAME=postgres
-   DB_USER=postgres.ecyncrgyvyepppgelczk
+   DB_USER=postgres.your-project-ref
    DB_PASSWORD=GameLend
    ```
 

@@ -3,7 +3,7 @@
 ## Problem
 Getting `500 Internal Server Error` when trying to register:
 ```
-POST https://ecyncrgyvyepppgelczk.supabase.co/auth/v1/signup?redirect_to=http%3A%2F%2Flocalhost%2FGameLend%2Fauth.php%3Fmode%3Dlogin 500 (Internal Server Error)
+POST https://your-project-ref.supabase.co/auth/v1/signup?redirect_to=http%3A%2F%2Flocalhost%2FGameLend%2Fauth.php%3Fmode%3Dlogin 500 (Internal Server Error)
 ```
 
 ## Root Cause
@@ -122,7 +122,7 @@ When deploying to production, update:
    ```
 3. **Environment Variables** in hosting provider:
    ```
-   SUPABASE_URL=https://ecyncrgyvyepppgelczk.supabase.co
+   SUPABASE_URL=https://your-project-ref.supabase.co
    SUPABASE_ANON_KEY=eyJhbGc...
    ```
 

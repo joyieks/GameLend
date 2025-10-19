@@ -50,7 +50,7 @@ GameLend now uses **Supabase Auth** for secure user authentication instead of st
 Create a `.env` file in your project root (or set in your hosting environment):
 
 ```env
-SUPABASE_URL=https://ecyncrgyvyepppgelczk.supabase.co
+SUPABASE_URL=https://your-project-ref.supabase.co
 SUPABASE_ANON_KEY=your-anon-key-here
 ```
 
@@ -177,7 +177,7 @@ requireAdmin();
 
 3. **Supabase sends verification email** with link like:
    ```
-   https://ecyncrgyvyepppgelczk.supabase.co/auth/v1/verify
+   https://your-project-ref.supabase.co/auth/v1/verify
      ?token=xxxxx
      &type=signup
      &redirect_to=https://yourapp.com/welcome

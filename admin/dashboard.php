@@ -54,7 +54,10 @@ include 'includes/admin_header.php';
                 <h3 class="card-title">Total Users</h3>
             </div>
             <p style="font-size: 2rem; font-weight: bold; color: #667eea;"><?php echo $stats['total_users']; ?></p>
-            <a href="users.php" class="btn btn-primary">Manage Users</a>
+            <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                <a href="users.php" class="btn btn-primary">Manage Users</a>
+                <a href="add_user.php" class="btn btn-success"><i class="fas fa-user-plus"></i> Add User</a>
+            </div>
         </div>
         
         <div class="card">

@@ -29,13 +29,33 @@ if($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['transaction_id'])) {
         $pdo->beginTransaction();
         
         try {
+            // Get current game quantities to verify constraint
+            $stmt = $pdo->prepare("SELECT total_quantity, available_quantity FROM games WHERE id = ?");
+            $stmt->execute([$transaction['game_id']]);
+            $game_data = $stmt->fetch();
+            
+            // Check if incrementing would violate constraint
+            if ($game_data['available_quantity'] + 1 > $game_data['total_quantity']) {
+                throw new Exception("Cannot return game: available quantity would exceed total quantity. Please contact admin.");
+            }
+            
             // Update borrow transaction
             $stmt = $pdo->prepare("UPDATE borrow_transactions SET return_date = NOW(), status = 'returned' WHERE id = ?");
-            $stmt->execute([$transaction_id]);
+            $updateTransaction = $stmt->execute([$transaction_id]);
             
-            // Update game status and increase available quantity
+            if (!$updateTransaction) {
+                $errorInfo = $stmt->errorInfo();
+                throw new Exception("Failed to update transaction. SQLSTATE: {$errorInfo[0]}, Error: {$errorInfo[2]}");
+            }
+            
+            // Manually update game availability (don't rely on trigger)
             $stmt = $pdo->prepare("UPDATE games SET available_quantity = available_quantity + 1, status = CASE WHEN available_quantity + 1 > 0 THEN 'available' ELSE status END WHERE id = ?");
-            $stmt->execute([$transaction['game_id']]);
+            $updateGame = $stmt->execute([$transaction['game_id']]);
+            
+            if (!$updateGame) {
+                $errorInfo = $stmt->errorInfo();
+                throw new Exception("Failed to update game. SQLSTATE: {$errorInfo[0]}, Error: {$errorInfo[2]}");
+            }
             
             $pdo->commit();
             
@@ -44,7 +64,8 @@ if($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['transaction_id'])) {
             exit();
         } catch(Exception $e) {
             $pdo->rollback();
-            header('Location: dashboard.php?error=Failed to return game. Please try again.');
+            error_log("Return Error - Transaction: $transaction_id, User: $user_id, Game: {$transaction['game_id']}, Error: " . $e->getMessage());
+            header('Location: dashboard.php?error=' . urlencode($e->getMessage()));
             exit();
         }
     } else {

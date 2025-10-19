@@ -82,6 +82,17 @@ try {
         $dbUser = $stmt->fetch();
     }
 
+    // Check if user account is active
+    if ($dbUser['status'] !== 'active') {
+        http_response_code(403);
+        $status_message = $dbUser['status'] === 'inactive' ? 'Your account has been disabled.' : 'Your account is ' . $dbUser['status'] . '.';
+        echo json_encode([
+            'error' => $status_message . ' Please contact the administrator.',
+            'status' => $dbUser['status']
+        ]);
+        exit();
+    }
+
     // Create PHP session
     $_SESSION['user_id'] = $dbUser['id'];
     $_SESSION['auth_id'] = $dbUser['auth_id'];
@@ -90,6 +101,7 @@ try {
     $_SESSION['middle_name'] = $dbUser['middle_name'];
     $_SESSION['last_name'] = $dbUser['last_name'];
     $_SESSION['role'] = $dbUser['role'];
+    $_SESSION['status'] = $dbUser['status'];
     $_SESSION['logged_in'] = true;
 
     // Determine redirect URL

@@ -463,6 +463,70 @@ function clearAlerts() {
   loginSuccess.style.display = 'none';
 }
 
+// Handle email confirmation callback from URL hash
+async function handleEmailConfirmation() {
+  const hashParams = new URLSearchParams(window.location.hash.substring(1));
+  const error = hashParams.get('error');
+  const errorDescription = hashParams.get('error_description');
+  const accessToken = hashParams.get('access_token');
+  
+  // Check for errors in the URL
+  if (error) {
+    clearAlerts();
+    if (error === 'access_denied' && errorDescription) {
+      const message = errorDescription.replace(/\+/g, ' ');
+      if (message.includes('expired')) {
+        showError('Email confirmation link has expired. Please request a new one by registering again or contact support.');
+      } else {
+        showError('Email confirmation failed: ' + message);
+      }
+    } else {
+      showError('Email confirmation failed. Please try again or contact support.');
+    }
+    // Clean up URL
+    window.history.replaceState({}, document.title, window.location.pathname);
+    return;
+  }
+  
+  // Check if there's an access token (successful confirmation)
+  if (accessToken) {
+    clearAlerts();
+    showSuccess('Email confirmed successfully! You can now log in.');
+    
+    // Get the session
+    const { data: { session } } = await supabase.auth.getSession();
+    
+    if (session) {
+      // User is already logged in after confirmation, create PHP session
+      showSuccess('Email confirmed! Logging you in...');
+      
+      try {
+        const response = await fetch('login_handler.php', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ access_token: session.access_token })
+        });
+        
+        const result = await response.json();
+        
+        if (result.success && result.redirect) {
+          window.location.href = result.redirect;
+        } else {
+          showError(result.error || 'Session creation failed. Please log in manually.');
+        }
+      } catch (err) {
+        showError('Failed to create session. Please log in manually.');
+      }
+    }
+    
+    // Clean up URL
+    window.history.replaceState({}, document.title, window.location.pathname);
+  }
+}
+
+// Run email confirmation handler on page load
+handleEmailConfirmation();
+
 // Show PHP messages if they exist
 <?php if($success): ?>
 showSuccess(<?php echo json_encode($success); ?>);

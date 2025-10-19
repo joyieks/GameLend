@@ -17,7 +17,7 @@ if($_SERVER['REQUEST_METHOD'] == 'GET' && isset($_GET['id'])) {
     $transaction_id = $_GET['id'];
     
     // Get transaction details
-    $stmt = $pdo->prepare("SELECT bt.*, g.id as game_id, g.title, u.username 
+    $stmt = $pdo->prepare("SELECT bt.*, g.id as game_id, g.title, u.first_name, u.last_name, u.email 
                            FROM borrow_transactions bt 
                            JOIN games g ON bt.game_id = g.id 
                            JOIN users u ON bt.user_id = u.id 

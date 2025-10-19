@@ -8,9 +8,15 @@
 
 // Only start session if not already started
 if (session_status() === PHP_SESSION_NONE) {
+    // Load environment configuration
+    $isProduction = (getenv('APP_ENV') === 'production');
+    $sessionSecure = filter_var(getenv('SESSION_SECURE') ?: 'false', FILTER_VALIDATE_BOOLEAN);
+    $sessionSamesite = getenv('SESSION_SAMESITE') ?: 'Lax';
+    $sessionLifetime = (int)(getenv('SESSION_LIFETIME') ?: 0);
+    
     // Configure session cookie parameters BEFORE starting the session
     // Set session cookie to expire when browser closes (0 = session cookie)
-    ini_set('session.cookie_lifetime', '0');
+    ini_set('session.cookie_lifetime', (string)$sessionLifetime);
     
     // Prevent session fixation attacks
     ini_set('session.use_strict_mode', '1');
@@ -22,21 +28,22 @@ if (session_status() === PHP_SESSION_NONE) {
     // Use httponly to prevent JavaScript access to session cookie
     ini_set('session.cookie_httponly', '1');
     
-    // Use secure cookies if on HTTPS (recommended for production)
-    // Uncomment the next line when using HTTPS
-    // ini_set('session.cookie_secure', '1');
+    // Use secure cookies if on HTTPS (production)
+    if ($sessionSecure || $isProduction) {
+        ini_set('session.cookie_secure', '1');
+    }
     
     // Prevent browsers from caching session pages
     session_cache_limiter('nocache');
     
     // Set session cookie parameters
     session_set_cookie_params([
-        'lifetime' => 0,           // Expire when browser closes
+        'lifetime' => $sessionLifetime,  // Expire when browser closes (0) or custom
         'path' => '/',
-        'domain' => '',            // Current domain
-        'secure' => false,         // Set to true for HTTPS
-        'httponly' => true,        // Prevent JavaScript access
-        'samesite' => 'Lax'       // CSRF protection
+        'domain' => '',                   // Current domain
+        'secure' => $sessionSecure || $isProduction,  // true for HTTPS
+        'httponly' => true,               // Prevent JavaScript access
+        'samesite' => $sessionSamesite    // CSRF protection (Lax or Strict)
     ]);
     
     // Start the session

@@ -2,7 +2,7 @@
 
 ## Current Error
 ```
-POST https://ecyncrgyvyepppgelczk.supabase.co/auth/v1/signup 500 (Internal Server Error)
+POST https://your-project-ref.supabase.co/auth/v1/signup 500 (Internal Server Error)
 ```
 
 ## 🎯 Root Causes (In Order of Likelihood)

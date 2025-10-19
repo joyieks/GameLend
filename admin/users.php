@@ -52,16 +52,21 @@ if($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['toggle_status'])) {
     $user_id = $_POST['user_id'];
     $new_status = $_POST['new_status'];
     
-    // Don't allow admin to disable themselves
-    if($user_id == $_SESSION['user_id'] && $new_status === 'disabled') {
-        $message = 'You cannot disable your own account';
+    // Validate status value (must match database constraint)
+    $valid_statuses = ['active', 'suspended', 'inactive'];
+    if (!in_array($new_status, $valid_statuses)) {
+        $message = 'Invalid status value';
+        $message_type = 'danger';
+    } elseif($user_id == $_SESSION['user_id'] && $new_status !== 'active') {
+        // Don't allow admin to disable/suspend themselves
+        $message = 'You cannot disable or suspend your own account';
         $message_type = 'danger';
     } else {
         $stmt = $pdo->prepare("UPDATE users SET status = ?, updated_at = NOW() WHERE id = ?");
         
         if($stmt->execute([$new_status, $user_id])) {
-            $status_text = $new_status === 'active' ? 'enabled' : 'disabled';
-            $message = "User {$status_text} successfully";
+            $status_text = $new_status === 'active' ? 'activated' : $new_status;
+            $message = "User status changed to '{$status_text}' successfully";
             $message_type = 'success';
         } else {
             $message = 'Failed to update user status. Please try again.';
@@ -169,8 +174,11 @@ include 'includes/admin_header.php';
 </style>
 
 <div class="card">
-    <div class="card-header">
-        <h2 class="card-title">Manage Users</h2>
+    <div class="card-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+        <h2 class="card-title" style="margin: 0;">Manage Users</h2>
+        <a href="add_user.php" class="btn btn-primary" style="display: inline-flex; align-items: center; gap: 0.5rem;">
+            <i class="fas fa-user-plus"></i> Add New User
+        </a>
     </div>
     
     <?php if($message): ?>
@@ -242,7 +250,7 @@ include 'includes/admin_header.php';
                                             <form method="POST" onsubmit="return confirm('Disable this user? They will not be able to login until re-enabled.')">
                                                 <input type="hidden" name="toggle_status" value="1">
                                                 <input type="hidden" name="user_id" value="<?php echo $user['id']; ?>">
-                                                <input type="hidden" name="new_status" value="disabled">
+                                                <input type="hidden" name="new_status" value="inactive">
                                                 <button type="submit" class="btn btn-warning btn-sm"><i class="fas fa-user-times"></i> Disable</button>
                                             </form>
                                         <?php else: ?>

@@ -275,6 +275,7 @@
                 <li><a href="games.php"><i class="fas fa-gamepad"></i> Manage Games</a></li>
                 <li><a href="users.php"><i class="fas fa-users"></i> Manage Users</a></li>
                 <li><a href="reports.php"><i class="fas fa-chart-bar"></i> Reports</a></li>
+                <li><a href="settings.php"><i class="fas fa-cog"></i> Settings</a></li>
                 <li><a href="profile.php"><i class="fas fa-user-shield"></i> My Profile</a></li>
                 <!-- Supabase handles auth; add client-side logout if needed -->
             </ul>
