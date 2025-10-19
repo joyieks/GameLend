@@ -69,7 +69,7 @@ if (session_status() === PHP_SESSION_NONE) {
         if (basename($_SERVER['PHP_SELF']) !== 'login.php' && 
             basename($_SERVER['PHP_SELF']) !== 'register.php' && 
             basename($_SERVER['PHP_SELF']) !== 'index.php') {
-            header('Location: /GameLend/login.php?timeout=1');
+            header('Location: /login.php?timeout=1');
             exit();
         }
     }

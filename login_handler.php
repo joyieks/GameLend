@@ -106,8 +106,8 @@ try {
 
     // Determine redirect URL
     $redirectUrl = ($dbUser['role'] === 'admin') 
-        ? '/GameLend/admin/dashboard.php' 
-        : '/GameLend/customer/dashboard.php';
+        ? '/admin/dashboard.php' 
+        : '/customer/dashboard.php';
 
     echo json_encode([
         'success' => true,
