@@ -54,25 +54,22 @@
     php_value error_log /var/log/php_errors.log
 </IfModule>
 
-# Protect sensitive directories
-<DirectoryMatch "^\.|\/\.(git|svn|hg)">
-    Order allow,deny
-    Deny from all
-</DirectoryMatch>
-
 # Protect configuration files
 <FilesMatch "^(\.env|\.env\..*|composer\.json|composer\.lock|package\.json|package-lock\.json)$">
     Order allow,deny
     Deny from all
 </FilesMatch>
 
-# Protect database files
-<DirectoryMatch "^db$">
-    <FilesMatch "\.(sql|php)$">
-        Order allow,deny
-        Deny from all
-    </FilesMatch>
-</DirectoryMatch>
+# Protect .git directory and hidden files
+RedirectMatch 404 /\.git
+RedirectMatch 404 /\.svn
+RedirectMatch 404 /\.hg
+
+# Protect database SQL files
+<FilesMatch "\.(sql)$">
+    Order allow,deny
+    Deny from all
+</FilesMatch>
 
 # Allow access to health check
 <Files "health.php">
