@@ -82,35 +82,6 @@ if($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['update_user'])) {
     }
 }
 
-// Handle password reset
-if($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['reset_password'])) {
-    $new_password = $_POST['new_password'];
-    $confirm_password = $_POST['confirm_password'];
-    
-    if(empty($new_password) || empty($confirm_password)) {
-        $message = 'Password fields are required';
-        $message_type = 'danger';
-    } elseif($new_password !== $confirm_password) {
-        $message = 'Passwords do not match';
-        $message_type = 'danger';
-    } elseif(strlen($new_password) < 6) {
-        $message = 'Password must be at least 6 characters long';
-        $message_type = 'danger';
-    } else {
-        // Update password
-        $hashed_password = password_hash($new_password, PASSWORD_DEFAULT);
-        $stmt = $pdo->prepare("UPDATE users SET password = ?, updated_at = NOW() WHERE id = ?");
-        
-        if($stmt->execute([$hashed_password, $user_id])) {
-            $message = 'Password reset successfully';
-            $message_type = 'success';
-        } else {
-            $message = 'Failed to reset password. Please try again.';
-            $message_type = 'danger';
-        }
-    }
-}
-
 // Handle user status toggle
 if($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['toggle_status'])) {
     $new_status = $_POST['new_status'];
@@ -707,42 +678,6 @@ include 'includes/admin_header.php';
                 </button>
             </form>
         </div>
-    </div>
-
-    <!-- Password Reset Section -->
-    <div class="content-section" style="margin-bottom: 2rem;">
-        <h2 class="section-title">
-            <i class="fas fa-key"></i>
-            Reset Password
-        </h2>
-        
-        <form method="POST">
-            <input type="hidden" name="reset_password" value="1">
-            
-            <div class="form-group">
-                <label for="new_password" class="form-label">New Password</label>
-                <div class="password-container">
-                    <input type="password" id="new_password" name="new_password" class="form-control" required>
-                    <button type="button" class="toggle-password" onclick="togglePasswordVisibility('new_password')">
-                        <i class="fas fa-eye"></i>
-                    </button>
-                </div>
-            </div>
-            
-            <div class="form-group">
-                <label for="confirm_password" class="form-label">Confirm New Password</label>
-                <div class="password-container">
-                    <input type="password" id="confirm_password" name="confirm_password" class="form-control" required>
-                    <button type="button" class="toggle-password" onclick="togglePasswordVisibility('confirm_password')">
-                        <i class="fas fa-eye"></i>
-                    </button>
-                </div>
-            </div>
-            
-            <button type="submit" class="btn btn-warning">
-                <i class="fas fa-key"></i> Reset Password
-            </button>
-        </form>
     </div>
 
     <!-- User Status Management -->
