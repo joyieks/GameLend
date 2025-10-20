@@ -19,8 +19,8 @@ $stats['total_games'] = $stmt->fetch()['count'];
 $stmt = $pdo->query("SELECT COUNT(*) as count FROM games WHERE status = 'available'");
 $stats['available_games'] = $stmt->fetch()['count'];
 
-// Borrowed games
-$stmt = $pdo->query("SELECT COUNT(*) as count FROM games WHERE status = 'borrowed'");
+// Borrowed games (count active borrow transactions)
+$stmt = $pdo->query("SELECT COUNT(*) as count FROM borrow_transactions WHERE status = 'borrowed'");
 $stats['borrowed_games'] = $stmt->fetch()['count'];
 
 // Total transactions
