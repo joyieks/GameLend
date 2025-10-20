@@ -746,7 +746,7 @@ if (forgotPasswordForm) {
     
     // Send password reset email using Supabase
     const { error } = await supabase.auth.resetPasswordForEmail(resetEmail, {
-      redirectTo: window.location.origin + '/GameLend/change_password.php'
+      redirectTo: window.location.origin + '/change_password.php'
     });
     
     if (error) {
