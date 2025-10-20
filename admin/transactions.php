@@ -26,13 +26,16 @@ if(isset($_POST['update_status'])) {
         $stmt = $pdo->prepare("UPDATE borrow_transactions SET status = ? WHERE id = ?");
         $stmt->execute([$new_status, $transaction_id]);
         
-        // If marking as returned, update game status to available
+        // If marking as returned, increment game's available quantity
         if($new_status === 'returned') {
-            $stmt = $pdo->prepare("UPDATE games g 
-                                 JOIN borrow_transactions bt ON g.id = bt.game_id 
-                                 SET g.status = 'available' 
-                                 WHERE bt.id = ?");
+            // Get the game_id from the transaction
+            $stmt = $pdo->prepare("SELECT game_id FROM borrow_transactions WHERE id = ?");
             $stmt->execute([$transaction_id]);
+            $game_id = $stmt->fetchColumn();
+            
+            // Increment available_quantity
+            $stmt = $pdo->prepare("UPDATE games SET available_quantity = available_quantity + 1 WHERE id = ?");
+            $stmt->execute([$game_id]);
         }
         
         $pdo->commit();
