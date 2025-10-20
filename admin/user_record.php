@@ -87,7 +87,7 @@ if($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['toggle_status'])) {
     $new_status = $_POST['new_status'];
     
     // Don't allow admin to disable themselves
-    if($user_id == $_SESSION['user_id'] && $new_status === 'disabled') {
+    if($user_id == $_SESSION['user_id'] && $new_status === 'inactive') {
         $message = 'You cannot disable your own account';
         $message_type = 'danger';
     } else {
@@ -701,7 +701,7 @@ include 'includes/admin_header.php';
                 <?php if(($user['status'] ?? 'active') === 'active'): ?>
                     <form method="POST" style="display: inline;">
                         <input type="hidden" name="toggle_status" value="1">
-                        <input type="hidden" name="new_status" value="disabled">
+                        <input type="hidden" name="new_status" value="inactive">
                         <button type="submit" class="btn btn-danger" 
                                 onclick="return confirm('Are you sure you want to disable this user? They will not be able to login until re-enabled.')">
                             <i class="fas fa-user-times"></i> Disable User
