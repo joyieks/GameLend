@@ -37,12 +37,11 @@ if(!$user) {
 if($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['update_user'])) {
     $first_name = trim($_POST['first_name']);
     $last_name = trim($_POST['last_name']);
-    $gender = $_POST['gender'];
     $email = trim($_POST['email']);
     $role = $_POST['role'];
     
     // Validation
-    if(empty($first_name) || empty($last_name) || empty($gender) || empty($email) || empty($role)) {
+    if(empty($first_name) || empty($last_name) || empty($email) || empty($role)) {
         $message = 'All fields are required';
         $message_type = 'danger';
     } elseif(strlen($first_name) < 2) {
@@ -64,9 +63,9 @@ if($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['update_user'])) {
             $message_type = 'danger';
         } else {
             // Update user profile
-            $stmt = $pdo->prepare("UPDATE users SET first_name = ?, last_name = ?, gender = ?, email = ?, role = ?, updated_at = NOW() WHERE id = ?");
+            $stmt = $pdo->prepare("UPDATE users SET first_name = ?, last_name = ?, email = ?, role = ?, updated_at = NOW() WHERE id = ?");
             
-            if($stmt->execute([$first_name, $last_name, $gender, $email, $role, $user_id])) {
+            if($stmt->execute([$first_name, $last_name, $email, $role, $user_id])) {
                 // Refresh user data
                 $stmt = $pdo->prepare("SELECT * FROM users WHERE id = ?");
                 $stmt->execute([$user_id]);
@@ -598,10 +597,6 @@ include 'includes/admin_header.php';
                 <span class="info-value"><?php echo htmlspecialchars($user['email']); ?></span>
             </div>
             <div class="info-item">
-                <span class="info-label">Gender:</span>
-                <span class="info-value"><?php echo ucfirst(str_replace('_', ' ', $user['gender'])); ?></span>
-            </div>
-            <div class="info-item">
                 <span class="info-label">Role:</span>
                 <span class="info-value">
                     <span class="badge badge-<?php echo $user['role'] === 'admin' ? 'danger' : 'primary'; ?>">
@@ -647,16 +642,6 @@ include 'includes/admin_header.php';
                     <label for="last_name" class="form-label">Last Name</label>
                     <input type="text" id="last_name" name="last_name" class="form-control" 
                            value="<?php echo htmlspecialchars($user['last_name']); ?>" required>
-                </div>
-                
-                <div class="form-group">
-                    <label for="gender" class="form-label">Gender</label>
-                    <select id="gender" name="gender" class="form-control" required>
-                        <option value="male" <?php echo $user['gender'] === 'male' ? 'selected' : ''; ?>>Male</option>
-                        <option value="female" <?php echo $user['gender'] === 'female' ? 'selected' : ''; ?>>Female</option>
-                        <option value="other" <?php echo $user['gender'] === 'other' ? 'selected' : ''; ?>>Other</option>
-                        <option value="prefer_not_to_say" <?php echo $user['gender'] === 'prefer_not_to_say' ? 'selected' : ''; ?>>Prefer not to say</option>
-                    </select>
                 </div>
                 
                 <div class="form-group">
