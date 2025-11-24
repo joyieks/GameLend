@@ -32,14 +32,6 @@ $stmt = $pdo->query("SELECT COUNT(*) as count FROM borrow_transactions
                      WHERE status = 'borrowed' AND borrow_date < NOW() - INTERVAL '14 days'");
 $stats['overdue_games'] = $stmt->fetch()['count'];
 
-// Recent transactions
-$stmt = $pdo->query("SELECT bt.*, u.first_name, u.last_name, g.title, g.platform 
-                     FROM borrow_transactions bt 
-                     JOIN users u ON bt.user_id = u.id 
-                     JOIN games g ON bt.game_id = g.id 
-                     ORDER BY bt.borrow_date DESC LIMIT 10");
-$recent_transactions = $stmt->fetchAll();
-
 include 'includes/admin_header.php';
 ?>
 
@@ -101,70 +93,5 @@ include 'includes/admin_header.php';
         </div>
     </div>
 </div>
-
-<!-- Admin Profile Section -->
-<div class="card">
-    <div class="card-header">
-        <h3 class="card-title">Admin Profile</h3>
-    </div>
-    <div style="display: flex; justify-content: space-between; align-items: center; padding: 1rem 0;">
-        <div>
-            <p><strong>Welcome, <?php echo htmlspecialchars($_SESSION['first_name'] . ' ' . $_SESSION['last_name']); ?>!</strong></p>
-            <p><strong>Role:</strong> Administrator</p>
-            <p><strong>Email:</strong> <?php echo htmlspecialchars($_SESSION['email']); ?></p>
-        </div>
-        <a href="profile.php" class="btn btn-primary">
-            <i class="fas fa-user-shield"></i> Manage Profile
-        </a>
-    </div>
-</div>
-
-<div class="card">
-    <div class="card-header">
-        <h3 class="card-title">Recent Transactions</h3>
-    </div>
-    
-    <?php if(empty($recent_transactions)): ?>
-        <p>No recent transactions.</p>
-    <?php else: ?>
-        <table class="table">
-            <thead>
-                <tr>
-                    <th>User</th>
-                    <th>Game</th>
-                    <th>Platform</th>
-                    <th>Borrow Date</th>
-                    <th>Status</th>
-                    <th>Actions</th>
-                </tr>
-            </thead>
-            <tbody>
-                <?php foreach($recent_transactions as $transaction): ?>
-                    <tr>
-                        <td><?php echo htmlspecialchars($transaction['first_name'] . ' ' . $transaction['last_name']); ?></td>
-                        <td><?php echo htmlspecialchars($transaction['title']); ?></td>
-                        <td><?php echo htmlspecialchars($transaction['platform']); ?></td>
-                        <td><?php echo date('M j, Y', strtotime($transaction['borrow_date'])); ?></td>
-                        <td>
-                            <span class="badge badge-<?php echo $transaction['status']; ?>">
-                                <?php echo ucfirst($transaction['status']); ?>
-                            </span>
-                        </td>
-                        <td>
-                            <?php if($transaction['status'] === 'borrowed'): ?>
-                                <a href="return_game.php?id=<?php echo $transaction['id']; ?>" 
-                                   class="btn btn-success btn-sm" 
-                                   data-confirm="Mark this game as returned?">
-                                    Mark Returned
-                                </a>
-                            <?php endif; ?>
-                        </td>
-                    </tr>
-                <?php endforeach; ?>
-            </tbody>
-        </table>
-    <?php endif; ?>
-</div>
-
 
 <?php include 'includes/admin_footer.php'; ?>

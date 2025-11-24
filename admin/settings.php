@@ -31,15 +31,45 @@ if($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['update_settings'])) {
         $message_type = 'danger';
     } else {
         try {
+            // Check if table exists, create if not
+            $tableCheck = $pdo->query("SELECT to_regclass('public.system_settings')");
+            $tableExists = $tableCheck->fetchColumn() !== null;
+            
+            if (!$tableExists) {
+                // Create the table if it doesn't exist
+                $pdo->exec("
+                    CREATE TABLE IF NOT EXISTS system_settings (
+                        id SERIAL PRIMARY KEY,
+                        setting_key VARCHAR(100) UNIQUE NOT NULL,
+                        setting_value TEXT NOT NULL,
+                        setting_type VARCHAR(50) DEFAULT 'string',
+                        description TEXT,
+                        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                        updated_by INTEGER REFERENCES users(id)
+                    );
+                    
+                    CREATE INDEX IF NOT EXISTS idx_system_settings_key ON system_settings(setting_key);
+                ");
+            }
+            
             $pdo->beginTransaction();
             
-            // Update borrow duration
-            $stmt = $pdo->prepare("UPDATE system_settings SET setting_value = ?, updated_at = NOW(), updated_by = ? WHERE setting_key = 'borrow_duration_days'");
-            $stmt->execute([$borrow_duration, $_SESSION['user_id']]);
+            // Upsert borrow duration
+            $stmt = $pdo->prepare("
+                INSERT INTO system_settings (setting_key, setting_value, setting_type, description, updated_at, updated_by)
+                VALUES ('borrow_duration_days', ?, 'integer', 'Default number of days for borrowing a game', NOW(), ?)
+                ON CONFLICT (setting_key) DO UPDATE SET setting_value = ?, updated_at = NOW(), updated_by = ?
+            ");
+            $stmt->execute([$borrow_duration, $_SESSION['user_id'], $borrow_duration, $_SESSION['user_id']]);
             
-            // Update late fee
-            $stmt = $pdo->prepare("UPDATE system_settings SET setting_value = ?, updated_at = NOW(), updated_by = ? WHERE setting_key = 'late_fee_per_day'");
-            $stmt->execute([number_format($late_fee, 2, '.', ''), $_SESSION['user_id']]);
+            // Upsert late fee
+            $stmt = $pdo->prepare("
+                INSERT INTO system_settings (setting_key, setting_value, setting_type, description, updated_at, updated_by)
+                VALUES ('late_fee_per_day', ?, 'decimal', 'Late fee amount charged per day for overdue games', NOW(), ?)
+                ON CONFLICT (setting_key) DO UPDATE SET setting_value = ?, updated_at = NOW(), updated_by = ?
+            ");
+            $late_fee_formatted = number_format($late_fee, 2, '.', '');
+            $stmt->execute([$late_fee_formatted, $_SESSION['user_id'], $late_fee_formatted, $_SESSION['user_id']]);
             
             $pdo->commit();
             
@@ -47,15 +77,28 @@ if($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['update_settings'])) {
             $message_type = 'success';
         } catch(Exception $e) {
             $pdo->rollback();
-            $message = 'Failed to update settings. Please try again.';
+            $message = 'Failed to update settings: ' . $e->getMessage();
             $message_type = 'danger';
+            error_log("Settings update error: " . $e->getMessage());
         }
     }
 }
 
-// Get current settings
-$stmt = $pdo->query("SELECT * FROM system_settings ORDER BY setting_key");
-$settings = $stmt->fetchAll(PDO::FETCH_KEY_PAIR);
+// Get current settings with error handling
+$settings = [];
+try {
+    // Check if table exists
+    $tableCheck = $pdo->query("SELECT to_regclass('public.system_settings')");
+    $tableExists = $tableCheck->fetchColumn() !== null;
+    
+    if ($tableExists) {
+        $stmt = $pdo->query("SELECT setting_key, setting_value FROM system_settings ORDER BY setting_key");
+        $settings = $stmt->fetchAll(PDO::FETCH_KEY_PAIR);
+    }
+} catch (Exception $e) {
+    error_log("Settings table error: " . $e->getMessage());
+    // Table doesn't exist, will use defaults
+}
 
 // Default values if not found
 $borrow_duration = $settings['borrow_duration_days'] ?? 14;
@@ -72,11 +115,20 @@ include 'includes/admin_header.php';
     }
     
     .settings-card {
-        background: white;
-        border-radius: 16px;
+        background: rgba(255, 255, 255, 0.4);
+        backdrop-filter: blur(25px) saturate(180%);
+        -webkit-backdrop-filter: blur(25px) saturate(180%);
+        border-radius: 20px;
         padding: 2rem;
-        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15), 0 0 0 1px rgba(255, 255, 255, 0.3);
+        border: 1px solid rgba(255, 255, 255, 0.4);
         margin-bottom: 2rem;
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+    
+    .settings-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 15px 50px rgba(0, 0, 0, 0.2), 0 0 0 1px rgba(255, 255, 255, 0.4);
     }
     
     .form-group {
@@ -92,17 +144,23 @@ include 'includes/admin_header.php';
     
     .form-control {
         width: 100%;
-        padding: 0.75rem;
+        padding: 0.875rem 1.25rem;
         font-size: 1rem;
-        border: 1px solid #ddd;
-        border-radius: 8px;
+        border: 2px solid rgba(225, 232, 237, 0.5);
+        border-radius: 12px;
         transition: all 0.3s ease;
+        background: rgba(255, 255, 255, 0.7);
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.04);
     }
     
     .form-control:focus {
         outline: none;
-        border-color: var(--primary);
-        box-shadow: 0 0 0 3px rgba(108, 92, 238, 0.15);
+        border-color: #667eea;
+        background: rgba(255, 255, 255, 0.85);
+        box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1), 0 4px 12px rgba(0, 0, 0, 0.08);
+        transform: translateY(-1px);
     }
     
     .form-help {
@@ -138,15 +196,21 @@ include 'includes/admin_header.php';
     }
     
     .alert-success {
-        background: #d4edda;
+        background: rgba(212, 237, 218, 0.8);
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
         color: #155724;
-        border: 1px solid #c3e6cb;
+        border: 1px solid rgba(195, 230, 203, 0.5);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
     }
     
     .alert-danger {
-        background: #f8d7da;
+        background: rgba(248, 215, 218, 0.8);
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
         color: #721c24;
-        border: 1px solid #f5c6cb;
+        border: 1px solid rgba(245, 198, 203, 0.5);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
     }
     
     .alert-warning {
@@ -155,27 +219,6 @@ include 'includes/admin_header.php';
         border: 1px solid #ffeaa7;
     }
     
-    .info-box {
-        background: #e7f3ff;
-        border-left: 4px solid #2196F3;
-        padding: 1rem;
-        border-radius: 8px;
-        margin-bottom: 1.5rem;
-    }
-    
-    .info-box h4 {
-        margin: 0 0 0.5rem 0;
-        color: #1976D2;
-    }
-    
-    .info-box ul {
-        margin: 0.5rem 0 0 1.5rem;
-        padding: 0;
-    }
-    
-    .info-box li {
-        margin-bottom: 0.25rem;
-    }
 </style>
 
 <div class="settings-container">
@@ -191,16 +234,6 @@ include 'includes/admin_header.php';
                 <?php echo htmlspecialchars($message); ?>
             </div>
         <?php endif; ?>
-        
-        <div class="info-box">
-            <h4><i class="fas fa-info-circle"></i> Important Notes</h4>
-            <ul>
-                <li>Changes apply immediately to <strong>new</strong> borrow transactions</li>
-                <li>Existing borrowed games keep their original due dates</li>
-                <li>Late fees are calculated automatically for overdue games</li>
-                <li>Users will see the updated duration when borrowing games</li>
-            </ul>
-        </div>
         
         <form method="POST">
             <div class="settings-card">
@@ -255,49 +288,6 @@ include 'includes/admin_header.php';
                 </a>
             </div>
         </form>
-    </div>
-    
-    <!-- Current System Status -->
-    <div class="settings-card">
-        <h3 style="margin-top: 0;">
-            <i class="fas fa-chart-line"></i> Current System Status
-        </h3>
-        
-        <?php
-        // Get statistics
-        $stmt = $pdo->query("SELECT COUNT(*) as count FROM borrow_transactions WHERE status = 'borrowed'");
-        $active_borrows = $stmt->fetch()['count'];
-        
-        $stmt = $pdo->query("SELECT COUNT(*) as count FROM borrow_transactions 
-                            WHERE status = 'borrowed' AND borrow_date < NOW() - INTERVAL '{$borrow_duration} days'");
-        $overdue_count = $stmt->fetch()['count'];
-        
-        $stmt = $pdo->query("SELECT COUNT(*) as count FROM games WHERE status = 'available'");
-        $available_games = $stmt->fetch()['count'];
-        ?>
-        
-        <div class="grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-top: 1rem;">
-            <div class="card">
-                <div class="card-header">
-                    <h4 class="card-title">Active Borrows</h4>
-                </div>
-                <p style="font-size: 2rem; font-weight: bold; color: #667eea;"><?php echo $active_borrows; ?></p>
-            </div>
-            
-            <div class="card">
-                <div class="card-header">
-                    <h4 class="card-title">Overdue Games</h4>
-                </div>
-                <p style="font-size: 2rem; font-weight: bold; color: #dc3545;"><?php echo $overdue_count; ?></p>
-            </div>
-            
-            <div class="card">
-                <div class="card-header">
-                    <h4 class="card-title">Available Games</h4>
-                </div>
-                <p style="font-size: 2rem; font-weight: bold; color: #28a745;"><?php echo $available_games; ?></p>
-            </div>
-        </div>
     </div>
 </div>
 

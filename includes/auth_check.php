@@ -58,6 +58,78 @@ function validateSession() {
         }
     }
     
+    // Check user status in database (verify account is still active)
+    // This ensures disabled users are kicked out immediately, even if already logged in
+    // Only check every 30 seconds to avoid excessive database queries
+    $should_check_status = !isset($_SESSION['last_status_check']) || 
+                          (time() - $_SESSION['last_status_check']) > 30;
+    
+    if ($should_check_status) {
+        try {
+            // Use global $pdo if available, otherwise create connection
+            global $pdo;
+            
+            if (!isset($pdo)) {
+                // Create database connection
+                require_once __DIR__ . '/../includes/env_loader.php';
+                
+                $host = getenv('DB_HOST') ?: 'aws-1-us-east-2.pooler.supabase.com';
+                $port = getenv('DB_PORT') ?: '6543';
+                $dbname = getenv('DB_NAME') ?: 'postgres';
+                $username = getenv('DB_USER') ?: '';
+                $password = getenv('DB_PASSWORD') ?: '';
+                
+                $databaseUrl = getenv('DATABASE_URL') ?: getenv('SUPABASE_DB_URL');
+                if ($databaseUrl) {
+                    $parts = parse_url($databaseUrl);
+                    if ($parts !== false && isset($parts['scheme'])) {
+                        $host = $parts['host'] ?? $host;
+                        $port = (string)($parts['port'] ?? $port);
+                        $username = $parts['user'] ?? $username;
+                        $password = $parts['pass'] ?? $password;
+                        $dbname = ltrim($parts['path'] ?? ('/' . $dbname), '/');
+                    }
+                }
+                
+                $dsn = 'pgsql:host=' . $host . ';' .
+                       ($port ? ('port=' . $port . ';') : '') .
+                       'dbname=' . $dbname . ';sslmode=require';
+                       
+                $pdo = new PDO($dsn, $username, $password, [
+                    PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+                    PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
+                ]);
+            }
+            
+            $stmt = $pdo->prepare("SELECT status FROM users WHERE id = ?");
+            $stmt->execute([$_SESSION['user_id']]);
+            $user = $stmt->fetch();
+            
+            if (!$user || $user['status'] !== 'active') {
+                // User account is disabled, suspended, or deleted
+                $status = $user['status'] ?? 'inactive';
+                
+                // Destroy session
+                session_unset();
+                session_destroy();
+                
+                // Redirect to login with appropriate message
+                $message = urlencode('Your account has been disabled. Please contact the administrator.');
+                header("Location: ../login.php?error=$message");
+                exit();
+            }
+            
+            // Update session status and last check time
+            $_SESSION['status'] = $user['status'];
+            $_SESSION['last_status_check'] = time();
+            
+        } catch (Exception $e) {
+            // Log error but don't break the application
+            error_log("Session validation error: " . $e->getMessage());
+            // Continue with existing session if database check fails
+        }
+    }
+    
     // Update last activity time
     $_SESSION['last_activity'] = time();
 }

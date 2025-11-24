@@ -28,13 +28,39 @@ include 'includes/header.php';
         --danger: #d63031;
         --gray: #dfe6e9;
     }
+    body {
+        background: linear-gradient(rgba(17, 24, 39, 0.65), rgba(17, 24, 39, 0.65)), url('assets/img/background2.png') center/cover no-repeat;
+        background-attachment: fixed;
+        min-height: 100vh;
+    }
+    
+    /* Ensure header and footer blend with background */
+    .navbar {
+        background: rgba(44, 62, 80, 0.75) !important;
+        backdrop-filter: blur(20px) saturate(180%) !important;
+        -webkit-backdrop-filter: blur(20px) saturate(180%) !important;
+        box-shadow: 0 4px 30px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(255, 255, 255, 0.1) !important;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important;
+    }
+    
+    .footer {
+        background: rgba(44, 62, 80, 0.75) !important;
+        backdrop-filter: blur(20px) saturate(180%) !important;
+        -webkit-backdrop-filter: blur(20px) saturate(180%) !important;
+        box-shadow: 0 -4px 30px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(255, 255, 255, 0.1) !important;
+        border-top: 1px solid rgba(255, 255, 255, 0.1) !important;
+    }
+    
+    .footer p {
+        text-shadow: 0 2px 8px rgba(0, 0, 0, 0.3) !important;
+    }
+    
     .login-container { /* reuse login layout for visual parity */
         min-height: 80vh;
         display: flex;
         align-items: center;
         justify-content: center;
         padding: 2rem;
-        background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
     }
     .login-card {
         background: white;
@@ -50,9 +76,56 @@ include 'includes/header.php';
     .card-header::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 4px; background: linear-gradient(90deg, var(--secondary), var(--accent)); }
     .card-title { margin: 0; font-size: 1.5rem; font-weight: 800; color: white !important; text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3); }
     .card-body { padding: 1.5rem; }
-    .alert { padding: 1rem; border-radius: 10px; margin-bottom: 1.5rem; font-weight: 500; }
-    .alert-danger { background: rgba(214, 48, 49, 0.1); color: var(--danger); border: 1px solid rgba(214, 48, 49, 0.2); }
-    .alert-success { background: rgba(0, 184, 148, 0.1); color: var(--success); border: 1px solid rgba(0, 184, 148, 0.2); }
+    /* Enhanced Alert Styles */
+    .alert {
+        border-radius: 12px;
+        padding: 1rem 1.25rem;
+        margin-bottom: 1.5rem;
+        border: none;
+        font-size: 0.95rem;
+        font-weight: 500;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        animation: slideDown 0.3s ease-out;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    @keyframes slideDown {
+        from {
+            opacity: 0;
+            transform: translateY(-20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+    
+    .alert-danger {
+        background: linear-gradient(135deg, #fff5f5 0%, #ffe5e5 100%);
+        color: #c53030;
+        border-left: 4px solid #e53e3e;
+    }
+    
+    .alert-danger i {
+        color: #e53e3e;
+        margin-right: 8px;
+        font-size: 1.1rem;
+        vertical-align: middle;
+    }
+    
+    .alert-success {
+        background: linear-gradient(135deg, #f0fff4 0%, #e6ffec 100%);
+        color: #276749;
+        border-left: 4px solid #38a169;
+    }
+    
+    .alert-success i {
+        color: #38a169;
+        margin-right: 8px;
+        font-size: 1.1rem;
+        vertical-align: middle;
+    }
     .form-group { margin-bottom: 1rem; }
     .form-label { display: block; margin-bottom: 0.5rem; font-weight: 600; color: var(--dark); }
     .form-control { width: 100%; padding: 0.8rem; font-size: 1rem; border: 2px solid #e9ecef; border-radius: 10px; transition: all 0.3s ease; background: #f8f9fa; }
@@ -138,7 +211,7 @@ include 'includes/header.php';
             </form>
 
             <div class="register-link" style="text-align:center; margin-top:1rem; color:#6c757d;">
-                Already have an account? <a href="auth.php?mode=login" style="color: var(--primary); font-weight:600;">Login here</a>
+                Already have an account? <a href="login.php" style="color: var(--primary); font-weight:600;">Login here</a>
             </div>
         </div>
     </div>
@@ -150,12 +223,23 @@ const SUPABASE_URL = <?php echo json_encode($supabaseUrl); ?>;
 const SUPABASE_ANON_KEY = <?php echo json_encode($supabaseAnonKey); ?>;
 const regError = document.getElementById('regError');
 const regSuccess = document.getElementById('regSuccess');
-function showError(msg){ regError.style.display='block'; regError.textContent=msg; }
-function showSuccess(msg){ regSuccess.style.display='block'; regSuccess.textContent=msg; }
-function clearAlerts(){ regError.style.display='none'; regSuccess.style.display='none'; }
+function showError(msg){ 
+  regError.style.display='block'; 
+  regError.innerHTML='<i class="fas fa-exclamation-circle"></i> ' + msg;
+  regSuccess.style.display='none';
+}
+function showSuccess(msg){ 
+  regSuccess.style.display='block'; 
+  regSuccess.innerHTML='<i class="fas fa-check-circle"></i> ' + msg;
+  regError.style.display='none';
+}
+function clearAlerts(){ 
+  regError.style.display='none'; 
+  regSuccess.style.display='none'; 
+}
 
 if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
-  showError('Missing SUPABASE_URL or SUPABASE_ANON_KEY configuration.');
+  showError('System configuration error. Please contact the administrator.');
 }
 
 const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
@@ -172,17 +256,23 @@ document.getElementById('registerForm').addEventListener('submit', async (e) => 
   const password = document.getElementById('password').value;
   const confirm_password = document.getElementById('confirm_password').value;
 
-  // Validation
+  // Validation with clear messages
   if (!first_name || !last_name || !email || !password) {
-    return showError('First name, last name, email, and password are required.');
+    return showError('Please fill in all required fields (First Name, Last Name, Email, and Password).');
+  }
+  
+  // Email format validation
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!emailRegex.test(email)) {
+    return showError('Please enter a valid email address (e.g., user@example.com).');
   }
 
   if (password.length < 6) {
-    return showError('Password must be at least 6 characters long.');
+    return showError('Password must be at least 6 characters long for security purposes.');
   }
 
   if (password !== confirm_password) {
-    return showError('Passwords do not match.');
+    return showError('Passwords do not match. Please make sure both passwords are identical.');
   }
 
   // Build redirect URL for email confirmation
@@ -205,18 +295,29 @@ document.getElementById('registerForm').addEventListener('submit', async (e) => 
   });
 
   if (error) {
-    return showError(error.message || 'Registration failed. Please try again.');
+    // Provide clear, specific error messages
+    if (error.message.includes('already registered') || error.message.includes('already been registered')) {
+      return showError('This email address is already registered. Please use a different email or try logging in.');
+    } else if (error.message.includes('invalid email')) {
+      return showError('The email address format is invalid. Please enter a valid email address.');
+    } else if (error.message.includes('Password should be')) {
+      return showError('Password does not meet requirements. Please use at least 6 characters.');
+    } else if (error.message.includes('rate limit')) {
+      return showError('Too many registration attempts. Please wait a few minutes before trying again.');
+    } else {
+      return showError(error.message || 'Registration failed. Please try again or contact support if the problem persists.');
+    }
   }
 
   // Check if email confirmation is required
   if (data.user && !data.session) {
-    showSuccess('Registration successful! Please check your email to confirm your account.');
+    showSuccess('Registration successful! Please check your email inbox and click the verification link to activate your account.');
     setTimeout(() => {
       window.location.href = 'login.php';
-    }, 3000);
+    }, 4000);
   } else if (data.session) {
     // If auto-confirmed (unlikely in production)
-    showSuccess('Registration successful! Redirecting to login...');
+    showSuccess('Registration successful! Your account is now active. Redirecting to login...');
     setTimeout(() => {
       window.location.href = 'login.php';
     }, 1500);

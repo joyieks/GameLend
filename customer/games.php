@@ -135,39 +135,61 @@ include 'includes/customer_header.php';
     .page-header {
         text-align: center;
         margin-bottom: 2.5rem;
+        padding: 2rem;
     }
     
     .page-title {
         font-size: 2.5rem;
-        color: var(--dark);
+        color: white;
         margin-bottom: 0.5rem;
         font-weight: 800;
+        text-shadow: 2px 2px 8px rgba(0, 0, 0, 0.8);
     }
     
     .page-subtitle {
-        color: #6c757d;
+        color: white;
         font-size: 1.1rem;
+        font-weight: 500;
+        text-shadow: 2px 2px 6px rgba(0, 0, 0, 0.7);
     }
     
     .filter-card {
-        background: white;
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(10px);
         border-radius: 16px;
         padding: 1.5rem;
         margin-bottom: 2rem;
-        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
-        border-left: 4px solid #2c3e50;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.15);
+        border-left: 4px solid #667eea;
     }
     
     .filter-form {
         display: flex;
         gap: 1rem;
-        align-items: end;
+        align-items: flex-end;
         flex-wrap: wrap;
     }
     
     .form-group {
+        display: flex;
+        flex-direction: column;
         flex: 1;
         min-width: 200px;
+    }
+    
+    .button-group {
+        display: flex;
+        gap: 0.5rem;
+        align-items: flex-end;
+        flex-shrink: 0;
+        margin-bottom: 0;
+    }
+    
+    .button-group .btn {
+        white-space: nowrap;
+        padding: 0.875rem 1.5rem;
+        margin: 0;
+        height: auto;
     }
     
     .form-label {
@@ -218,11 +240,13 @@ include 'includes/customer_header.php';
     .btn-warning {
         background: #fdcb6e;
         color: var(--dark);
+        border: 2px solid #f0b44a;
     }
     
     .btn-warning:hover {
         background: #f0b44a;
         transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(253, 203, 110, 0.4);
     }
     
     .btn-success {
@@ -237,21 +261,45 @@ include 'includes/customer_header.php';
     }
     
     .alert {
-        padding: 1rem;
-        border-radius: 8px;
+        padding: 1rem 1.25rem;
+        border-radius: 12px;
         margin-bottom: 1.5rem;
+        font-weight: 500;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        animation: slideDown 0.3s ease-out;
+    }
+    
+    @keyframes slideDown {
+        from {
+            opacity: 0;
+            transform: translateY(-20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
     }
     
     .alert-success {
-        background: #d4edda;
-        color: #155724;
-        border: 1px solid #c3e6cb;
+        background: linear-gradient(135deg, #f0fff4 0%, #e6ffec 100%);
+        color: #276749;
+        border-left: 4px solid #38a169;
+    }
+    
+    .alert-success i {
+        color: #38a169;
+        margin-right: 8px;
     }
     
     .alert-danger {
-        background: #f8d7da;
-        color: #721c24;
-        border: 1px solid #f5c6cb;
+        background: linear-gradient(135deg, #fff5f5 0%, #ffe5e5 100%);
+        color: #c53030;
+        border-left: 4px solid #e53e3e;
+    }
+    
+    .alert-danger i {
+        color: #e53e3e;
+        margin-right: 8px;
     }
     
     .alert-warning {
@@ -279,6 +327,49 @@ include 'includes/customer_header.php';
     .game-card:hover {
         transform: translateY(-5px);
         box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+    }
+    
+    .game-card-image {
+        width: 100%;
+        height: 220px;
+        background-size: cover;
+        background-position: center;
+        background-repeat: no-repeat;
+        position: relative;
+        background-color: #f0f2f5;
+    }
+    
+    .game-card-image::after {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: linear-gradient(to bottom, transparent 0%, rgba(0,0,0,0.4) 100%);
+    }
+    
+    .no-image-placeholder {
+        width: 100%;
+        height: 220px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-direction: column;
+        color: white;
+    }
+    
+    .no-image-placeholder i {
+        font-size: 4rem;
+        margin-bottom: 0.5rem;
+        opacity: 0.8;
+    }
+    
+    .no-image-placeholder p {
+        margin: 0;
+        font-weight: 600;
+        opacity: 0.9;
     }
     
     .game-card-header {
@@ -355,15 +446,31 @@ include 'includes/customer_header.php';
     @media (max-width: 768px) {
         .filter-form {
             flex-direction: column;
-            align-items: stretch;
         }
         
         .form-group {
+            width: 100%;
             min-width: 100%;
+        }
+        
+        .button-group {
+            width: 100%;
+        }
+        
+        .button-group .btn {
+            flex: 1;
         }
         
         .games-grid {
             grid-template-columns: 1fr;
+        }
+        
+        .page-header {
+            padding: 1.5rem;
+        }
+        
+        .page-title {
+            font-size: 2rem;
         }
     }
 </style>
@@ -375,11 +482,17 @@ include 'includes/customer_header.php';
     </div>
     
     <?php if(isset($success_message)): ?>
-        <div class="alert alert-success"><?php echo htmlspecialchars($success_message); ?></div>
+        <div class="alert alert-success">
+            <i class="fas fa-check-circle"></i>
+            <?php echo htmlspecialchars($success_message); ?>
+        </div>
     <?php endif; ?>
     
     <?php if(isset($error_message)): ?>
-        <div class="alert alert-danger"><?php echo htmlspecialchars($error_message); ?></div>
+        <div class="alert alert-danger">
+            <i class="fas fa-exclamation-circle"></i>
+            <?php echo htmlspecialchars($error_message); ?>
+        </div>
     <?php endif; ?>
     
     <!-- Search and Filter -->
@@ -405,9 +518,13 @@ include 'includes/customer_header.php';
                 </select>
             </div>
             
-            <div class="form-group">
-                <button type="submit" class="btn btn-primary">Filter</button>
-                <a href="games.php" class="btn btn-warning">Clear</a>
+            <div class="button-group">
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-filter"></i> Filter
+                </button>
+                <a href="games.php" class="btn btn-warning">
+                    <i class="fas fa-times"></i> Clear
+                </a>
             </div>
         </form>
     </div>
@@ -418,6 +535,17 @@ include 'includes/customer_header.php';
         <div class="games-grid">
             <?php foreach($games as $game): ?>
                 <div class="game-card">
+                    <!-- Game Cover Image -->
+                    <?php if(!empty($game['image_url'])): ?>
+                        <div class="game-card-image" style="background-image: url('<?php echo htmlspecialchars($game['image_url']); ?>');">
+                        </div>
+                    <?php else: ?>
+                        <div class="no-image-placeholder">
+                            <i class="fas fa-gamepad"></i>
+                            <p>No Image Available</p>
+                        </div>
+                    <?php endif; ?>
+                    
                     <div class="game-card-header">
                         <h3 class="game-card-title"><?php echo htmlspecialchars($game['title']); ?></h3>
                     </div>

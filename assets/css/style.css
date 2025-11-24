@@ -282,11 +282,26 @@ main {
 
 /* Footer */
 .footer {
-    background: #333;
+    background: rgba(44, 62, 80, 0.75);
+    backdrop-filter: blur(20px) saturate(180%);
+    -webkit-backdrop-filter: blur(20px) saturate(180%);
     color: white;
     text-align: center;
-    padding: 1rem 0;
+    padding: 0.4rem 0;
     margin-top: auto;
+    box-shadow: 0 -4px 30px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(255, 255, 255, 0.1);
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    position: relative;
+    z-index: 100;
+}
+
+.footer p {
+    text-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+    font-weight: 400;
+    font-size: 0.8rem;
+    margin: 0;
+    padding: 0;
+    line-height: 1.2;
 }
 
 /* Responsive Design */

@@ -18,10 +18,11 @@ if (($supabaseUrl === '' || $supabaseAnonKey === '') && file_exists(__DIR__ . '/
 if(isset($_SESSION['user_id'])) {
     if($_SESSION['role'] === 'admin') {
         header('Location: admin/dashboard.php');
+        exit();
     } else {
         header('Location: customer/dashboard.php');
+        exit();
     }
-    exit();
 }
 
 $error = '';
@@ -35,6 +36,11 @@ if(isset($_GET['logout'])) {
 // Check for session timeout message
 if(isset($_GET['timeout'])) {
     $error = 'Your session has expired. Please login again.';
+}
+
+// Check for account disabled message
+if(isset($_GET['error'])) {
+    $error = htmlspecialchars($_GET['error']);
 }
 
 // Check for registration success message
@@ -61,8 +67,30 @@ include 'includes/header.php';
     }
     
     body {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        background: linear-gradient(rgba(17, 24, 39, 0.65), rgba(17, 24, 39, 0.65)), url('assets/img/background2.png') center/cover no-repeat;
+        background-attachment: fixed;
         min-height: 100vh;
+    }
+    
+    /* Ensure header and footer blend with background */
+    .navbar {
+        background: rgba(44, 62, 80, 0.75) !important;
+        backdrop-filter: blur(20px) saturate(180%) !important;
+        -webkit-backdrop-filter: blur(20px) saturate(180%) !important;
+        box-shadow: 0 4px 30px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(255, 255, 255, 0.1) !important;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important;
+    }
+    
+    .footer {
+        background: rgba(44, 62, 80, 0.75) !important;
+        backdrop-filter: blur(20px) saturate(180%) !important;
+        -webkit-backdrop-filter: blur(20px) saturate(180%) !important;
+        box-shadow: 0 -4px 30px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(255, 255, 255, 0.1) !important;
+        border-top: 1px solid rgba(255, 255, 255, 0.1) !important;
+    }
+    
+    .footer p {
+        text-shadow: 0 2px 8px rgba(0, 0, 0, 0.3) !important;
     }
     
     .login-container {
@@ -331,6 +359,83 @@ include 'includes/header.php';
         background: #bdc3c7;
     }
     
+    /* Enhanced Alert Styles */
+    .alert {
+        border-radius: 12px;
+        padding: 1rem 1.25rem;
+        margin-bottom: 1.5rem;
+        border: none;
+        font-size: 0.95rem;
+        font-weight: 500;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        animation: slideDown 0.3s ease-out;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    @keyframes slideDown {
+        from {
+            opacity: 0;
+            transform: translateY(-20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+    
+    .alert-danger {
+        background: linear-gradient(135deg, #fff5f5 0%, #ffe5e5 100%);
+        color: #c53030;
+        border-left: 4px solid #e53e3e;
+    }
+    
+    .alert-danger i {
+        color: #e53e3e;
+        margin-right: 8px;
+        font-size: 1.1rem;
+        vertical-align: middle;
+    }
+    
+    .alert-success {
+        background: linear-gradient(135deg, #f0fff4 0%, #e6ffec 100%);
+        color: #276749;
+        border-left: 4px solid #38a169;
+    }
+    
+    .alert-success i {
+        color: #38a169;
+        margin-right: 8px;
+        font-size: 1.1rem;
+        vertical-align: middle;
+    }
+    
+    .alert-warning {
+        background: linear-gradient(135deg, #fffaf0 0%, #fef5e7 100%);
+        color: #975a16;
+        border-left: 4px solid #dd6b20;
+    }
+    
+    .alert-warning i {
+        color: #dd6b20;
+        margin-right: 8px;
+        font-size: 1.1rem;
+        vertical-align: middle;
+    }
+    
+    .alert-info {
+        background: linear-gradient(135deg, #ebf8ff 0%, #dbeafe 100%);
+        color: #2c5282;
+        border-left: 4px solid #3182ce;
+    }
+    
+    .alert-info i {
+        color: #3182ce;
+        margin-right: 8px;
+        font-size: 1.1rem;
+        vertical-align: middle;
+    }
+    
     @media (max-width: 768px) {
         .login-container {
             padding: 1rem;
@@ -342,6 +447,11 @@ include 'includes/header.php';
         
         .form-control {
             font-size: 16px; /* Prevents zoom on iOS */
+        }
+        
+        .alert {
+            padding: 0.875rem 1rem;
+            font-size: 0.9rem;
         }
     }
 </style>
@@ -545,20 +655,20 @@ document.getElementById('loginForm').addEventListener('submit', async (e) => {
   const submitButton = e.target.querySelector('button[type="submit"]');
   const originalButtonText = submitButton.innerHTML;
   
-  // Client-side validation
+  // Client-side validation with clear error messages
   if (!email || !password) {
-    return showError('Please fill in all fields.');
+    return showError('Both email and password are required. Please fill in all fields.');
   }
   
   // Email format validation
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   if (!emailRegex.test(email)) {
-    return showError('Please enter a valid email address.');
+    return showError('Please enter a valid email address (e.g., user@example.com).');
   }
   
   // Password length validation
   if (password.length < 6) {
-    return showError('Password must be at least 6 characters long.');
+    return showError('Password must be at least 6 characters long. Please try again.');
   }
   
   // Disable button and show loading state
@@ -577,25 +687,27 @@ document.getElementById('loginForm').addEventListener('submit', async (e) => {
       submitButton.disabled = false;
       submitButton.innerHTML = originalButtonText;
       
-      // Provide user-friendly error messages
-      if (error.message.includes('Invalid login credentials')) {
-        return showError('Invalid email or password. Please try again.');
-      } else if (error.message.includes('Email not confirmed')) {
-        return showError('Please verify your email address before logging in. Check your inbox for the verification link.');
-      } else if (error.message.includes('Email link is invalid')) {
-        return showError('The login link has expired. Please try logging in again.');
-      } else if (error.message.includes('Too many requests')) {
-        return showError('Too many login attempts. Please wait a few minutes and try again.');
-      } else {
-        return showError(error.message || 'Login failed. Please try again.');
-      }
+    // Provide clear, professional error messages
+    if (error.message.includes('Invalid login credentials')) {
+      return showError('Incorrect email or password. Please check your credentials and try again.');
+    } else if (error.message.includes('Email not confirmed')) {
+      return showError('Email verification required. Please check your inbox and verify your email address before logging in.');
+    } else if (error.message.includes('Email link is invalid')) {
+      return showError('This login link has expired. Please request a new one by trying to log in again.');
+    } else if (error.message.includes('Too many requests')) {
+      return showError('Too many login attempts detected. For security reasons, please wait 5 minutes before trying again.');
+    } else if (error.message.includes('User not found')) {
+      return showError('No account found with this email address. Please check your email or register for a new account.');
+    } else {
+      return showError(error.message || 'Unable to sign in. Please try again or contact support if the problem persists.');
+    }
     }
     
     // Check if session exists
     if (!data.session) {
       submitButton.disabled = false;
       submitButton.innerHTML = originalButtonText;
-      return showError('Please verify your email before logging in. Check your inbox for the verification link.');
+      return showError('Email verification required. Please check your inbox and click the verification link before logging in.');
     }
     
     // Send token to PHP to create session
@@ -609,21 +721,24 @@ document.getElementById('loginForm').addEventListener('submit', async (e) => {
       })
     });
     
-    // Handle HTTP errors
+    // Handle HTTP errors with detailed messages
     if (!response.ok) {
-      let errorMessage = 'Failed to create session. Please try again.';
+      let errorMessage = 'Unable to complete login. Please try again.';
       
       try {
         const errorData = await response.json();
         console.error('Login handler error:', errorData);
+        
+        // Use the error message from the server (now professional and clear)
         errorMessage = errorData.error || errorMessage;
         
-        // Log debug info if available
+        // Log debug info if available (for developers)
         if (errorData.debug) {
           console.error('Debug info:', errorData.debug);
         }
       } catch (parseError) {
         console.error('Error parsing error response:', parseError);
+        errorMessage = 'Server error occurred. Please try again or contact support.';
       }
       
       submitButton.disabled = false;
@@ -639,7 +754,7 @@ document.getElementById('loginForm').addEventListener('submit', async (e) => {
       console.error('Error parsing success response:', parseError);
       submitButton.disabled = false;
       submitButton.innerHTML = originalButtonText;
-      return showError('Invalid server response. Please try again.');
+      return showError('Unable to process server response. Please refresh the page and try again.');
     }
     
     // Handle session creation result
@@ -653,21 +768,21 @@ document.getElementById('loginForm').addEventListener('submit', async (e) => {
     } else {
       submitButton.disabled = false;
       submitButton.innerHTML = originalButtonText;
-      showError(result.error || 'Failed to create session. Please try again.');
+      showError(result.error || 'Unable to establish your session. Please try logging in again.');
     }
     
   } catch (err) {
-    // Handle network errors and other exceptions
+    // Handle network errors and other exceptions with clear messages
     console.error('Login error:', err);
     submitButton.disabled = false;
     submitButton.innerHTML = originalButtonText;
     
-    if (err.message.includes('Failed to fetch')) {
-      showError('Network error. Please check your internet connection and try again.');
-    } else if (err.message.includes('NetworkError')) {
-      showError('Cannot connect to server. Please check your internet connection.');
+    if (err.message.includes('Failed to fetch') || err.message.includes('NetworkError')) {
+      showError('Unable to connect to the server. Please check your internet connection and try again.');
+    } else if (err.message.includes('timeout')) {
+      showError('Connection timed out. Please check your internet connection and try again.');
     } else {
-      showError('An unexpected error occurred: ' + err.message);
+      showError('An unexpected error occurred. Please try again or contact support if the problem persists.');
     }
   }
 });
@@ -745,8 +860,12 @@ if (forgotPasswordForm) {
     if (modalSuccess) modalSuccess.style.display = 'none';
     
     // Send password reset email using Supabase
+    // Get the base path (e.g., /GameLend) from current location
+    const basePath = window.location.pathname.substring(0, window.location.pathname.lastIndexOf('/'));
+    // Use absolute URL to ensure correct redirect
+    const redirectUrl = window.location.origin + basePath + '/change_password.php';
     const { error } = await supabase.auth.resetPasswordForEmail(resetEmail, {
-      redirectTo: window.location.origin + '/change_password.php'
+      redirectTo: redirectUrl
     });
     
     if (error) {

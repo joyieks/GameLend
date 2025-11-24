@@ -170,34 +170,6 @@ include 'includes/admin_header.php';
         display: inline-block;
     }
     
-    .logout-button {
-        display: inline-block;
-        margin-top: 1.5rem;
-        padding: 0.75rem 2rem;
-        background: rgba(255, 59, 48, 0.9);
-        color: white;
-        text-decoration: none;
-        border-radius: 25px;
-        font-weight: 600;
-        font-size: 1rem;
-        transition: all 0.3s ease;
-        border: 2px solid rgba(255, 255, 255, 0.3);
-        position: relative;
-        z-index: 1;
-        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
-    }
-    
-    .logout-button:hover {
-        background: rgba(255, 59, 48, 1);
-        transform: translateY(-2px);
-        box-shadow: 0 6px 20px rgba(255, 59, 48, 0.4);
-        border-color: rgba(255, 255, 255, 0.5);
-    }
-    
-    .logout-button i {
-        margin-right: 0.5rem;
-    }
-    
     .profile-stats {
         display: grid;
         grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
@@ -238,11 +210,19 @@ include 'includes/admin_header.php';
     }
     
     .profile-section {
-        background: white;
-        border-radius: 15px;
+        background: rgba(255, 255, 255, 0.4);
+        backdrop-filter: blur(25px) saturate(180%);
+        -webkit-backdrop-filter: blur(25px) saturate(180%);
+        border-radius: 20px;
         padding: 2rem;
-        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
-        border: 1px solid #f0f0f0;
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15), 0 0 0 1px rgba(255, 255, 255, 0.3);
+        border: 1px solid rgba(255, 255, 255, 0.4);
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+    
+    .profile-section:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 15px 50px rgba(0, 0, 0, 0.2), 0 0 0 1px rgba(255, 255, 255, 0.4);
     }
     
     .section-title {
@@ -273,18 +253,22 @@ include 'includes/admin_header.php';
     .form-control {
         width: 100%;
         padding: 0.8rem;
-        border: 2px solid #e9ecef;
-        border-radius: 10px;
+        border: 2px solid rgba(233, 236, 239, 0.5);
+        border-radius: 12px;
         font-size: 1rem;
         transition: all 0.3s ease;
-        background: #f8f9fa;
+        background: rgba(255, 255, 255, 0.7);
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.04);
     }
     
     .form-control:focus {
         outline: none;
-        border-color: #2c3e50;
-        background: white;
-        box-shadow: 0 0 0 3px rgba(44, 62, 80, 0.1);
+        border-color: #667eea;
+        background: rgba(255, 255, 255, 0.85);
+        box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1), 0 4px 12px rgba(0, 0, 0, 0.08);
+        transform: translateY(-1px);
     }
     
     .btn {
@@ -338,27 +322,52 @@ include 'includes/admin_header.php';
     }
     
     .alert-success {
-        background: rgba(40, 167, 69, 0.1);
+        background: rgba(212, 237, 218, 0.8);
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
         color: #155724;
-        border: 1px solid rgba(40, 167, 69, 0.2);
+        border: 1px solid rgba(195, 230, 203, 0.5);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
     }
     
     .alert-danger {
-        background: rgba(220, 53, 69, 0.1);
+        background: rgba(248, 215, 218, 0.8);
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
         color: #721c24;
-        border: 1px solid rgba(220, 53, 69, 0.2);
+        border: 1px solid rgba(245, 198, 203, 0.5);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    }
+    
+    .alert-info {
+        background: rgba(217, 237, 247, 0.8);
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+        color: #004085;
+        border: 1px solid rgba(190, 229, 246, 0.5);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
     }
     
     .info-item {
         display: flex;
         justify-content: space-between;
         align-items: center;
-        padding: 0.8rem 0;
-        border-bottom: 1px solid #f0f0f0;
+        padding: 1rem;
+        margin-bottom: 0.5rem;
+        border-radius: 10px;
+        background: rgba(255, 255, 255, 0.3);
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+        transition: all 0.2s ease;
+    }
+    
+    .info-item:hover {
+        background: rgba(255, 255, 255, 0.5);
+        transform: translateX(5px);
     }
     
     .info-item:last-child {
-        border-bottom: none;
+        margin-bottom: 0;
     }
     
     .info-label {
@@ -430,10 +439,6 @@ include 'includes/admin_header.php';
         </div>
         <h1 class="profile-name"><?php echo htmlspecialchars($user['first_name'] . ' ' . $user['last_name']); ?></h1>
         <p class="profile-role">Administrator <span class="admin-badge">ADMIN</span></p>
-        <a href="../logout.php" class="logout-button" onclick="return confirm('Are you sure you want to logout?');">
-            <i class="fas fa-sign-out-alt"></i>
-            Logout
-        </a>
         
         <div class="profile-stats">
             <div class="stat-card">

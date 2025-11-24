@@ -17,36 +17,6 @@ require_once '../db/db_connect.php';
 $message = '';
 $message_type = '';
 
-// Handle user deletion
-if($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['delete_user'])) {
-    $user_id = $_POST['user_id'];
-    
-    // Don't allow admin to delete themselves
-    if($user_id == $_SESSION['user_id']) {
-        $message = 'You cannot delete your own account';
-        $message_type = 'danger';
-    } else {
-        // Check if user has any active borrows
-        $stmt = $pdo->prepare("SELECT COUNT(*) as count FROM borrow_transactions WHERE user_id = ? AND status = 'borrowed'");
-        $stmt->execute([$user_id]);
-        $active_borrows = $stmt->fetch()['count'];
-        
-        if($active_borrows > 0) {
-            $message = 'Cannot delete user with active borrowed games';
-            $message_type = 'danger';
-        } else {
-            $stmt = $pdo->prepare("DELETE FROM users WHERE id = ?");
-            if($stmt->execute([$user_id])) {
-                $message = 'User deleted successfully';
-                $message_type = 'success';
-            } else {
-                $message = 'Failed to delete user';
-                $message_type = 'danger';
-            }
-        }
-    }
-}
-
 // Handle user status toggle
 if($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['toggle_status'])) {
     $user_id = $_POST['user_id'];
@@ -108,31 +78,63 @@ include 'includes/admin_header.php';
         width: 100%;
         border-collapse: separate;
         border-spacing: 0;
-        background: #fff;
+        background: rgba(255, 255, 255, 0.4);
+        backdrop-filter: blur(20px) saturate(180%);
+        -webkit-backdrop-filter: blur(20px) saturate(180%);
         border-radius: 12px;
         overflow: hidden;
-        box-shadow: 0 8px 24px rgba(0,0,0,0.06);
+        box-shadow: 0 8px 24px rgba(0,0,0,0.1);
+        border: 1px solid rgba(255, 255, 255, 0.3);
     }
     .user-table thead th {
         position: sticky;
         top: 0;
         z-index: 2;
-        background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+        background: rgba(102, 126, 234, 0.75);
+        backdrop-filter: blur(20px) saturate(180%);
+        -webkit-backdrop-filter: blur(20px) saturate(180%);
         color: #fff;
         border-bottom: none;
-        padding: 0.9rem 1rem;
+        padding: 1rem 1.25rem;
         text-align: left;
         font-weight: 700;
         white-space: nowrap;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        position: relative;
     }
+    
+    .user-table thead th::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: linear-gradient(135deg, rgba(102, 126, 234, 0.3) 0%, rgba(118, 75, 162, 0.3) 100%);
+        z-index: -1;
+    }
+    
     .user-table tbody td {
-        padding: 0.9rem 1rem;
+        padding: 1rem 1.25rem;
         vertical-align: middle;
-        border-bottom: 1px solid #f0f2f5;
+        border-bottom: 1px solid rgba(240, 242, 245, 0.5);
         white-space: nowrap;
+        background: rgba(255, 255, 255, 0.3);
     }
+    
+    .user-table tbody tr {
+        background: rgba(255, 255, 255, 0.2);
+        transition: all 0.2s ease;
+    }
+    
+    .user-table tbody tr:nth-child(even) {
+        background: rgba(255, 255, 255, 0.3);
+    }
+    
     .user-table tbody tr:hover {
-        background: #fafbff;
+        background: rgba(248, 249, 255, 0.7) !important;
+        transform: scale(1.005);
     }
     .user-meta {
         display: flex;
@@ -141,32 +143,119 @@ include 'includes/admin_header.php';
     }
     .badge {
         border-radius: 999px;
-        padding: 0.25rem 0.6rem;
-        font-weight: 700;
-        letter-spacing: .2px;
+        padding: 0.35rem 0.75rem;
+        font-weight: 600;
+        letter-spacing: 0.3px;
+        font-size: 0.8rem;
+        text-transform: uppercase;
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
     }
-    .badge-info { background:#e3f2fd; color:#1e88e5; }
-    .badge-primary { background:#ede9fe; color:#6d28d9; }
-    .badge-danger { background:#fee2e2; color:#b91c1c; }
-    .badge-success { background:#dcfce7; color:#166534; }
-    .badge-warning { background:#fff7ed; color:#c2410c; }
+    .badge-info { 
+        background: rgba(227, 242, 253, 0.9); 
+        color: #1e88e5;
+        border: 1px solid rgba(30, 136, 229, 0.2);
+    }
+    .badge-primary { 
+        background: rgba(237, 233, 254, 0.9); 
+        color: #6d28d9;
+        border: 1px solid rgba(109, 40, 217, 0.2);
+    }
+    .badge-danger { 
+        background: rgba(254, 226, 226, 0.9); 
+        color: #b91c1c;
+        border: 1px solid rgba(185, 28, 28, 0.2);
+    }
+    .badge-success { 
+        background: rgba(220, 252, 231, 0.9); 
+        color: #166534;
+        border: 1px solid rgba(22, 101, 52, 0.2);
+    }
+    .badge-warning { 
+        background: rgba(255, 247, 237, 0.9); 
+        color: #c2410c;
+        border: 1px solid rgba(194, 65, 12, 0.2);
+    }
     .actions {
         display: flex;
-        gap: .5rem;
+        gap: 0.5rem;
         align-items: center;
         flex-wrap: wrap;
     }
-    .btn.btn-sm {
-        padding: .45rem .7rem;
-        border-radius: 8px;
-        font-weight: 700;
-        box-shadow: 0 4px 10px rgba(0,0,0,.08);
+    
+    .actions form {
+        margin: 0;
     }
-    .btn-primary.btn-sm { background: linear-gradient(135deg,#8b5cf6,#6366f1); border: none; }
-    .btn-warning.btn-sm { background: #f59e0b; border: none; color:#fff; }
-    .btn-success.btn-sm { background: #10b981; border: none; }
-    .btn-danger.btn-sm { background: #ef4444; border: none; }
-    .table-wrap { border-radius: 12px; overflow: visible; }
+    .btn.btn-sm {
+        padding: 0.5rem 1rem;
+        border-radius: 10px;
+        font-weight: 600;
+        font-size: 0.85rem;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        transition: all 0.3s ease;
+        border: none;
+        cursor: pointer;
+    }
+    
+    .btn.btn-sm:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
+    }
+    
+    .btn-primary.btn-sm { 
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+    }
+    
+    .btn-primary.btn-sm:hover {
+        box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+    }
+    
+    .btn-warning.btn-sm { 
+        background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+        color: white;
+    }
+    
+    .btn-warning.btn-sm:hover {
+        box-shadow: 0 6px 20px rgba(245, 158, 11, 0.4);
+    }
+    
+    .btn-success.btn-sm { 
+        background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+        color: white;
+    }
+    
+    .btn-success.btn-sm:hover {
+        box-shadow: 0 6px 20px rgba(16, 185, 129, 0.4);
+    }
+    .table-wrap { 
+        border-radius: 12px; 
+        overflow: hidden;
+        margin-bottom: 2rem;
+    }
+    
+    .alert {
+        padding: 1rem 1.5rem;
+        border-radius: 12px;
+        margin-bottom: 1.5rem;
+        font-weight: 500;
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    }
+    
+    .alert-success {
+        background: rgba(212, 237, 218, 0.8);
+        color: #155724;
+        border: 1px solid rgba(195, 230, 203, 0.5);
+    }
+    
+    .alert-danger {
+        background: rgba(248, 215, 218, 0.8);
+        color: #721c24;
+        border: 1px solid rgba(245, 198, 203, 0.5);
+    }
     @media (max-width: 992px) {
         .hide-lg { display: none; }
         .user-table thead th.hide-lg { display: none; }
@@ -185,16 +274,11 @@ include 'includes/admin_header.php';
         <div class="alert alert-<?php echo $message_type; ?>"><?php echo htmlspecialchars($message); ?></div>
     <?php endif; ?>
     
-    <div class="card">
-        <div class="card-header">
-            <h3 class="card-title">User List</h3>
-        </div>
-        
-        <?php if(empty($users)): ?>
-            <p>No users found.</p>
-        <?php else: ?>
-            <div class="table-wrap">
-            <table class="table user-table">
+    <?php if(empty($users)): ?>
+        <p>No users found.</p>
+    <?php else: ?>
+        <div class="table-wrap">
+        <table class="table user-table">
                 <thead>
                     <tr>
                         <th>Name</th>
@@ -247,26 +331,24 @@ include 'includes/admin_header.php';
                                     </a>
                                     <?php if($user['id'] != $_SESSION['user_id']): ?>
                                         <?php if(($user['status'] ?? 'active') === 'active'): ?>
-                                            <form method="POST" onsubmit="return confirm('Disable this user? They will not be able to login until re-enabled.')">
+                                            <form method="POST" onsubmit="return confirm('Disable this user? They will not be able to login until reactivated.')" style="display: inline;">
                                                 <input type="hidden" name="toggle_status" value="1">
                                                 <input type="hidden" name="user_id" value="<?php echo $user['id']; ?>">
                                                 <input type="hidden" name="new_status" value="inactive">
-                                                <button type="submit" class="btn btn-warning btn-sm"><i class="fas fa-user-times"></i> Disable</button>
+                                                <button type="submit" class="btn btn-warning btn-sm">
+                                                    <i class="fas fa-ban"></i> Disable
+                                                </button>
                                             </form>
                                         <?php else: ?>
-                                            <form method="POST" onsubmit="return confirm('Enable this user?')">
+                                            <form method="POST" onsubmit="return confirm('Reactivate this user? They will be able to login again.')" style="display: inline;">
                                                 <input type="hidden" name="toggle_status" value="1">
                                                 <input type="hidden" name="user_id" value="<?php echo $user['id']; ?>">
                                                 <input type="hidden" name="new_status" value="active">
-                                                <button type="submit" class="btn btn-success btn-sm"><i class="fas fa-user-check"></i> Enable</button>
+                                                <button type="submit" class="btn btn-success btn-sm">
+                                                    <i class="fas fa-user-check"></i> Reactivate
+                                                </button>
                                             </form>
                                         <?php endif; ?>
-                                        <form method="POST" onsubmit="return confirm('Delete this user? This action cannot be undone.')">
-                                            <input type="hidden" name="user_id" value="<?php echo $user['id']; ?>">
-                                            <button type="submit" name="delete_user" class="btn btn-danger btn-sm"><i class="fas fa-trash"></i> Delete</button>
-                                        </form>
-                                    <?php else: ?>
-                                        <span class="text-muted">Current User</span>
                                     <?php endif; ?>
                                 </div>
                             </td>
@@ -274,12 +356,12 @@ include 'includes/admin_header.php';
                     <?php endforeach; ?>
                 </tbody>
             </table>
-            </div>
-        <?php endif; ?>
-    </div>
-    
-    <!-- User Statistics -->
-    <div class="card">
+        </div>
+    <?php endif; ?>
+</div>
+
+<!-- User Statistics -->
+<div class="card">
         <div class="card-header">
             <h3 class="card-title">User Statistics</h3>
         </div>

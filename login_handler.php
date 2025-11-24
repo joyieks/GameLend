@@ -13,7 +13,10 @@ $data = json_decode($input, true);
 
 if (!isset($data['access_token'])) {
     http_response_code(400);
-    echo json_encode(['error' => 'Missing access token']);
+    echo json_encode([
+        'error' => 'Authentication failed. Please try logging in again.',
+        'message_type' => 'authentication_error'
+    ]);
     exit;
 }
 
@@ -37,7 +40,8 @@ if ($httpCode !== 200) {
     http_response_code(401);
     error_log("Supabase auth failed. HTTP Code: $httpCode, Response: $response, CURL Error: $curlError");
     echo json_encode([
-        'error' => 'Invalid token or expired session. Please try logging in again.',
+        'error' => 'Your session has expired. Please log in again to continue.',
+        'message_type' => 'session_expired',
         'debug' => [
             'http_code' => $httpCode,
             'response' => $response
@@ -50,7 +54,10 @@ $user = json_decode($response, true);
 
 if (!$user || !isset($user['id'])) {
     http_response_code(401);
-    echo json_encode(['error' => 'Invalid user data']);
+    echo json_encode([
+        'error' => 'Unable to verify your account. Please try logging in again.',
+        'message_type' => 'user_data_error'
+    ]);
     exit;
 }
 
@@ -85,10 +92,21 @@ try {
     // Check if user account is active
     if ($dbUser['status'] !== 'active') {
         http_response_code(403);
-        $status_message = $dbUser['status'] === 'inactive' ? 'Your account has been disabled.' : 'Your account is ' . $dbUser['status'] . '.';
+        
+        // Provide clear, professional error messages based on account status
+        $error_messages = [
+            'inactive' => 'Your account has been disabled by an administrator. Please contact support for assistance.',
+            'suspended' => 'Your account has been temporarily suspended. Please contact the administrator to resolve this issue.',
+            'pending' => 'Your account is pending approval. Please wait for administrator verification.',
+            'banned' => 'Your account has been permanently banned. Please contact support if you believe this is an error.'
+        ];
+        
+        $status_message = $error_messages[$dbUser['status']] ?? 'Your account status is currently ' . ucfirst($dbUser['status']) . '. Please contact the administrator for assistance.';
+        
         echo json_encode([
-            'error' => $status_message . ' Please contact the administrator.',
-            'status' => $dbUser['status']
+            'error' => $status_message,
+            'status' => $dbUser['status'],
+            'message_type' => 'account_status'
         ]);
         exit();
     }
@@ -104,10 +122,10 @@ try {
     $_SESSION['status'] = $dbUser['status'];
     $_SESSION['logged_in'] = true;
 
-    // Determine redirect URL
+    // Determine redirect URL (use relative path to work with subdirectory)
     $redirectUrl = ($dbUser['role'] === 'admin') 
-        ? '/admin/dashboard.php' 
-        : '/customer/dashboard.php';
+        ? 'admin/dashboard.php' 
+        : 'customer/dashboard.php';
 
     echo json_encode([
         'success' => true,
@@ -123,6 +141,10 @@ try {
 
 } catch (Exception $e) {
     http_response_code(500);
-    echo json_encode(['error' => 'Database error: ' . $e->getMessage()]);
+    error_log("Login database error: " . $e->getMessage());
+    echo json_encode([
+        'error' => 'An error occurred while processing your login. Please try again or contact support if the problem persists.',
+        'message_type' => 'database_error'
+    ]);
 }
 ?>

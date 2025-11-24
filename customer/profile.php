@@ -183,34 +183,6 @@ include 'includes/customer_header.php';
         z-index: 1;
     }
     
-    .logout-button {
-        display: inline-block;
-        margin-top: 1.5rem;
-        padding: 0.75rem 2rem;
-        background: rgba(255, 59, 48, 0.9);
-        color: white;
-        text-decoration: none;
-        border-radius: 25px;
-        font-weight: 600;
-        font-size: 1rem;
-        transition: all 0.3s ease;
-        border: 2px solid rgba(255, 255, 255, 0.3);
-        position: relative;
-        z-index: 1;
-        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
-    }
-    
-    .logout-button:hover {
-        background: rgba(255, 59, 48, 1);
-        transform: translateY(-2px);
-        box-shadow: 0 6px 20px rgba(255, 59, 48, 0.4);
-        border-color: rgba(255, 255, 255, 0.5);
-    }
-    
-    .logout-button i {
-        margin-right: 0.5rem;
-    }
-    
     .profile-stats {
         display: grid;
         grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
@@ -428,10 +400,6 @@ include 'includes/customer_header.php';
         </div>
         <h1 class="profile-name"><?php echo htmlspecialchars($user['first_name'] . ' ' . $user['last_name']); ?></h1>
         <p class="profile-role">Customer Member</p>
-        <a href="../logout.php" class="logout-button" onclick="return confirm('Are you sure you want to logout?');">
-            <i class="fas fa-sign-out-alt"></i>
-            Logout
-        </a>
         
         <div class="profile-stats">
             <div class="stat-card">

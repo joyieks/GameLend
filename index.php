@@ -20,10 +20,32 @@ include 'includes/header.php';
     }
     
     body {
-        background-color: #f8f9fa;
+        background-color: #ffffff;
         font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         color: var(--dark);
         line-height: 1.6;
+        min-height: 100vh;
+    }
+    
+    /* Ensure header and footer blend with background */
+    .navbar {
+        background: rgba(44, 62, 80, 0.75) !important;
+        backdrop-filter: blur(20px) saturate(180%) !important;
+        -webkit-backdrop-filter: blur(20px) saturate(180%) !important;
+        box-shadow: 0 4px 30px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(255, 255, 255, 0.1) !important;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important;
+    }
+    
+    .footer {
+        background: rgba(44, 62, 80, 0.75) !important;
+        backdrop-filter: blur(20px) saturate(180%) !important;
+        -webkit-backdrop-filter: blur(20px) saturate(180%) !important;
+        box-shadow: 0 -4px 30px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(255, 255, 255, 0.1) !important;
+        border-top: 1px solid rgba(255, 255, 255, 0.1) !important;
+    }
+    
+    .footer p {
+        text-shadow: 0 2px 8px rgba(0, 0, 0, 0.3) !important;
     }
     
     /* Make the landing hero full-width on the home page */

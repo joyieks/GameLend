@@ -1,4 +1,9 @@
     </main>
+    <footer class="footer">
+        <div class="container">
+            <p>&copy; 2024 GameLend. All rights reserved.</p>
+        </div>
+    </footer>
     
     <script>
         // Mobile menu toggle function

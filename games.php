@@ -253,6 +253,25 @@ include 'includes/header.php';
         box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
     }
     
+    .game-card-image {
+        width: 100%;
+        height: 200px;
+        background-size: cover;
+        background-position: center;
+        background-repeat: no-repeat;
+        position: relative;
+    }
+    
+    .game-card-image::after {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: linear-gradient(to bottom, transparent 0%, rgba(0,0,0,0.3) 100%);
+    }
+    
     .game-card-header {
         background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
         color: white;
@@ -390,6 +409,11 @@ include 'includes/header.php';
         <div class="games-grid">
             <?php foreach($games as $game): ?>
                 <div class="game-card">
+                    <?php if(!empty($game['image_url'])): ?>
+                        <div class="game-card-image" style="background-image: url('<?php echo htmlspecialchars($game['image_url']); ?>');">
+                        </div>
+                    <?php endif; ?>
+                    
                     <div class="game-card-header">
                         <h3 class="game-card-title"><?php echo htmlspecialchars($game['title']); ?></h3>
                     </div>

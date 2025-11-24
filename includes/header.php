@@ -37,16 +37,19 @@
         }
         
         .navbar {
-            background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+            background: rgba(44, 62, 80, 0.75);
+            backdrop-filter: blur(20px) saturate(180%);
+            -webkit-backdrop-filter: blur(20px) saturate(180%);
             color: white;
             padding: 0.8rem 2rem;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            box-shadow: var(--shadow);
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(255, 255, 255, 0.1);
             position: sticky;
             top: 0;
             z-index: 1000;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
         }
         
         .nav-brand a {
@@ -57,6 +60,7 @@
             font-size: 1.5rem;
             font-weight: 700;
             transition: var(--transition);
+            text-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
         }
         
         .nav-brand a:hover {
@@ -83,6 +87,7 @@
             transition: var(--transition);
             font-weight: 500;
             position: relative;
+            text-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
         }
         
         .nav-menu a:not(.logout):hover {
@@ -177,15 +182,18 @@
                 top: 100%;
                 left: 0;
                 right: 0;
-                background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+                background: rgba(44, 62, 80, 0.85);
+                backdrop-filter: blur(20px) saturate(180%);
+                -webkit-backdrop-filter: blur(20px) saturate(180%);
                 flex-direction: column;
                 padding: 1rem;
-                box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+                box-shadow: 0 4px 30px rgba(0, 0, 0, 0.4);
                 border-radius: 0 0 15px 15px;
                 transform: translateY(-100%);
                 opacity: 0;
                 visibility: hidden;
                 z-index: 1000;
+                border: 1px solid rgba(255, 255, 255, 0.1);
             }
             
             .nav-menu.active {
